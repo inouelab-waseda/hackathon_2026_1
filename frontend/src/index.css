@@ -1,2 +1,103 @@
 /* Tailwind CSS v4 はこの1行だけで有効になる（設定ファイルは不要）。 */
 @import "tailwindcss";
+
+/*
+ * デザイントークン。プロトタイプ設計（Warikan App.dc.html）の配色をそのまま採用する。
+ * 色を各コンポーネントに直書きせず、必ずここ経由（bg-paper / text-ink など）で使うこと。
+ */
+@theme {
+  --color-paper: #f7f6f3; /* 画面の背景 */
+  --color-card: #ffffff; /* カード・入力欄の背景 */
+  --color-subtle: #faf9f6; /* カード内のさらに薄い背景 */
+  --color-ink: #1a1a19; /* 本文 */
+  --color-muted: #8a877f; /* 小見出し・ラベル */
+  --color-faint: #b3afa6; /* プレースホルダ・補助テキスト */
+  --color-line: #e4e1da; /* 罫線・枠線 */
+  --color-accent: #1f9d6b; /* 緑（保存済み・ぴったり） */
+  --color-alert: #c8402f; /* 赤（金額を固定した学年・不足エラー） */
+
+  --font-sans: "Zen Kaku Gothic New", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * スマートフォン前提の調整。
+ * - タップ時の灰色のハイライトを消す
+ * - touch-action: manipulation でダブルタップ判定の待ち時間（約300ms）をなくす
+ */
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/*
+ * セーフエリア（ノッチ・ホームインジケータ）を避けるための余白。
+ * env() は対応していない環境では0になるので、max() で最低値を確保する。
+ */
+.pt-safe {
+  padding-top: max(3.5rem, calc(env(safe-area-inset-top) + 1rem));
+}
+
+.pb-safe {
+  padding-bottom: max(2rem, calc(env(safe-area-inset-bottom) + 1rem));
+}
+
+.pb-safe-tab {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 数値入力のスピナーを消す（金額・人数は独自の ± ボタンで操作するため） */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ボトムシートがせり上がる動き */
+@keyframes sheet-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-sheet-up {
+  animation: sheet-up 0.24s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* 3案が現れるときの動き */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease;
+}
+
+/* 横スクロール時のスクロールバーを隠す（スナップで位置がわかるため不要） */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
