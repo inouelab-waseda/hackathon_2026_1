@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e8e6e1;font-family:"Zen Kaku Gothic New",system-ui,sans-serif}
+a{color:#1f9d6b}a:hover{color:#178056}
+input{font-family:inherit}
+input:focus{outline:none}
+@keyframes sheetUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</helmet>
+<template id="__bundler_thumbnail" data-bg-color="#1f9d6b">
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+<rect width="1200" height="800" fill="#1f9d6b"></rect>
+<rect x="470" y="240" width="260" height="80" rx="14" fill="#ffffff"></rect>
+<rect x="470" y="360" width="260" height="80" rx="14" fill="#ffffff" opacity="0.65"></rect>
+<rect x="470" y="480" width="260" height="80" rx="14" fill="#ffffff" opacity="0.4"></rect>
+</svg>
+</template>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;display:flex;flex-direction:column;background:#f7f6f3;color:#1a1a19;overflow:hidden">
+
+<div style="padding:62px 20px 12px;display:flex;align-items:baseline;justify-content:space-between">
+<div style="font-size:30.2px;font-weight:900;letter-spacing:0.04em">割り勘</div>
+<div style="font-size:12.8px;font-weight:500;color:#8a877f;letter-spacing:0.08em">研究室の飲み会</div>
+</div>
+
+<div style="flex:1;overflow-y:auto;padding:0 16px 28px;display:flex;flex-direction:column;gap:14px">
+
+<div style="flex:none;background:#fff;border:1px solid #e4e1da;border-radius:14px;padding:9px 18px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+<div style="font-size:12.8px;font-weight:700;color:#8a877f;letter-spacing:0.1em">合計金額</div>
+<div style="display:flex;align-items:center;gap:4px;border-bottom:2px solid #1f9d6b;padding-bottom:1px">
+<span style="font-size:18.6px;font-weight:500;color:#b3afa6;font-family:'IBM Plex Mono',monospace">¥</span>
+<input value="{{ totalInput }}" onChange="{{ onTotal }}" inputMode="numeric" placeholder="0" style="width:140px;border:none;background:transparent;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:25.5px;font-weight:600;letter-spacing:-0.01em;color:#1a1a19;padding:0">
+</div>
+</div>
+
+<div style="flex:none;background:#fff;border:1px solid #e4e1da;border-radius:14px;overflow:hidden">
+<div onClick="{{ toggleInputs }}" style="{{ headerStyle }}">
+<div style="{{ caretStyle }}">▼</div>
+<div style="font-size:12.8px;font-weight:700;color:#8a877f;letter-spacing:0.1em">学年ごとの人数と負担</div>
+<div style="font-size:12.8px;font-weight:500;color:#b3afa6;font-family:'IBM Plex Mono',monospace">{{ headCountLabel }}</div>
+</div>
+<sc-if value="{{ inputsOpen }}" hint-placeholder-val="{{ true }}">
+<div>
+<sc-for list="{{ grades }}" as="g" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:10px;padding:11px 16px 11px 18px;border-top:1px solid #f0eee9">
+<div style="width:32px;font-family:'IBM Plex Mono',monospace;font-size:17.4px;font-weight:600;letter-spacing:0.02em">{{ g.label }}</div>
+<div style="display:flex;align-items:center;gap:2px;background:#f4f2ed;border-radius:9px;padding:3px">
+<button onClick="{{ g.dec }}" style="width:28px;height:28px;border:none;background:transparent;font-size:19.7px;font-weight:600;color:#6d6a63;cursor:pointer;border-radius:7px" style-hover="background:#e6e3dc">−</button>
+<div style="width:22px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:17.4px;font-weight:600">{{ g.count }}</div>
+<button onClick="{{ g.inc }}" style="width:28px;height:28px;border:none;background:transparent;font-size:19.7px;font-weight:600;color:#6d6a63;cursor:pointer;border-radius:7px" style-hover="background:#e6e3dc">+</button>
+</div>
+<div style="flex:1;display:flex;justify-content:flex-end;min-width:0">
+<div style="{{ g.fieldStyle }}">
+<span style="font-size:13.9px;color:#b3afa6;font-family:'IBM Plex Mono',monospace">¥</span>
+<input value="{{ g.amountInput }}" onChange="{{ g.onAmount }}" readOnly="{{ g.locked }}" inputMode="numeric" style="{{ g.inputStyle }}">
+</div>
+</div>
+<button onClick="{{ g.toggleFix }}" style="{{ g.fixBtnStyle }}">固定</button>
+</div>
+</sc-for>
+<div style="display:flex;justify-content:flex-end;padding:11px 16px 13px;border-top:1px solid #f0eee9">
+<button onClick="{{ calculate }}" style="border:none;background:#1a1a19;color:#fff;font-family:inherit;font-size:14.5px;font-weight:700;letter-spacing:0.04em;padding:11px 18px;border-radius:10px;cursor:pointer" style-hover="background:#1f9d6b">計算する</button>
+</div>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{ calculated }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;display:flex;gap:8px;animation:fadeIn .2s ease">
+<sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
+<div style="{{ p.cardStyle }}">
+<div style="{{ p.tintStyle }}">{{ p.tintLabel }}</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ p.rows }}" as="r" hint-placeholder-count="4">
+<div style="{{ r.rowStyle }}">
+<div style="{{ r.labelStyle }}">{{ r.label }}</div>
+<div style="display:flex;flex-direction:column;align-items:center;padding:5px 4px 4px">
+<div style="{{ r.amountStyle }}">{{ r.amount }}</div>
+<div style="{{ r.deltaStyle }}">{{ r.delta }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="{{ p.restRowStyle }}">
+<div style="font-size:11px;font-weight:700;color:#a8a49b;letter-spacing:0.04em">端数</div>
+<div style="{{ p.restStyle }}">{{ p.rest }}</div>
+</div>
+<button onClick="{{ p.choose }}" style="{{ p.btnStyle }}">この案にする</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<div style="flex:none;font-size:12.8px;line-height:1.6;color:#a8a49b;padding:0 4px">固定した学年はその金額のまま、残額を他の学年で分担します。候補は500円単位で計算し、割り切れない分を端数として表示します。</div>
+
+</div>
+
+<sc-if value="{{ adjustOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(26,26,25,0.42);display:flex;align-items:flex-end" onClick="{{ closeAdjust }}">
+<div style="width:100%;background:#f7f6f3;border-radius:22px 22px 0 0;padding:18px 20px 30px;animation:sheetUp 0.24s cubic-bezier(.2,.8,.3,1);max-height:88%;overflow-y:auto" onClick="{{ stop }}">
+<div style="width:36px;height:4px;background:#d9d5cd;border-radius:2px;margin:0 auto 16px"></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+<div style="font-size:16.2px;font-weight:900;letter-spacing:0.03em">負担額の調整</div>
+<div style="font-size:12.8px;color:#8a877f;font-family:'IBM Plex Mono',monospace">{{ adjustTitle }}</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+<sc-for list="{{ adjustRows }}" as="r" hint-placeholder-count="4">
+<div style="{{ r.rowStyle }}">
+<div style="display:flex;align-items:baseline;gap:8px">
+<div style="{{ r.labelStyle }}">{{ r.label }}</div>
+<div style="{{ r.tagStyle }}">{{ r.tag }}</div>
+<div style="font-size:12.8px;color:#a8a49b">{{ r.sub }}</div>
+</div>
+<div style="display:flex;align-items:center;gap:9px">
+<div style="{{ r.amountStyle }}">{{ r.amount }}</div>
+<div style="display:flex;gap:3px">
+<button onClick="{{ r.dec }}" style="width:30px;height:30px;border:1px solid #ddd9d1;background:#fff;border-radius:8px;font-size:17.4px;color:#6d6a63;cursor:pointer;line-height:1">−</button>
+<button onClick="{{ r.inc }}" style="width:30px;height:30px;border:1px solid #ddd9d1;background:#fff;border-radius:8px;font-size:17.4px;color:#6d6a63;cursor:pointer;line-height:1">+</button>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="{{ restBoxStyle }}">
+<div style="font-size:12.8px;font-weight:700;letter-spacing:0.08em">端数</div>
+<div style="display:flex;align-items:baseline;gap:8px">
+<div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600">{{ adjustRest }}</div>
+<div style="font-size:12.8px;font-weight:700">{{ adjustRestNote }}</div>
+</div>
+</div>
+<button onClick="{{ confirm }}" disabled="{{ confirmDisabled }}" style="{{ confirmStyle }}">{{ confirmLabel }}</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ resultOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(26,26,25,0.42);display:flex;align-items:flex-end" onClick="{{ closeResult }}">
+<div style="width:100%;background:#f7f6f3;border-radius:22px 22px 0 0;padding:20px 20px 30px;animation:sheetUp 0.24s cubic-bezier(.2,.8,.3,1);max-height:82%;overflow-y:auto" onClick="{{ stop }}">
+<div style="width:36px;height:4px;background:#d9d5cd;border-radius:2px;margin:0 auto 18px"></div>
+<div style="font-size:12.8px;font-weight:700;color:#8a877f;letter-spacing:0.1em;margin-bottom:8px">一人あたり</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+<sc-for list="{{ payers }}" as="p" hint-placeholder-count="4">
+<div style="{{ p.rowStyle }}">
+<div style="display:flex;align-items:baseline;gap:9px">
+<div style="{{ p.labelStyle }}">{{ p.label }}</div>
+<div style="{{ p.tagStyle }}">{{ p.tag }}</div>
+<div style="font-size:12.8px;color:#a8a49b">{{ p.sub }}</div>
+</div>
+<div style="{{ p.amountStyle }}">{{ p.amount }}</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:13.9px;color:#6d6a63;padding:0 4px 16px">
+<span>{{ summaryLeft }}</span><span>{{ summaryRight }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid #e8e5de;margin-bottom:14px">
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ddd9d1;border-radius:11px;padding:11px 13px">
+<div style="width:52px;flex:none;font-size:12.8px;font-weight:700;color:#8a877f;letter-spacing:0.06em">行事名</div>
+<input value="{{ eventName }}" onChange="{{ onEventName }}" placeholder="例）追いコン" style="flex:1;min-width:0;border:none;background:transparent;font-size:16.2px;font-weight:500;color:#1a1a19;padding:0">
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ddd9d1;border-radius:11px;padding:11px 13px">
+<div style="width:52px;flex:none;font-size:12.8px;font-weight:700;color:#8a877f;letter-spacing:0.06em">店名</div>
+<input value="{{ shopName }}" onChange="{{ onShopName }}" placeholder="例）鳥貴族 駅前店" style="flex:1;min-width:0;border:none;background:transparent;font-size:16.2px;font-weight:500;color:#1a1a19;padding:0">
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:flex-end;gap:10px">
+<button onClick="{{ copyResult }}" style="border:1px solid #ddd9d1;background:#fff;color:#1a1a19;font-family:inherit;font-size:15.1px;font-weight:700;letter-spacing:0.04em;padding:13px 16px;border-radius:11px;cursor:pointer">{{ copyLabel }}</button>
+<button onClick="{{ save }}" style="{{ saveStyle }}">{{ saveLabel }}</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;960px&quot;},&quot;weightPreset&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;学年差あり&quot;,&quot;均等&quot;,&quot;M2が多め&quot;],&quot;default&quot;:&quot;学年差あり&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;割り勘ルール&quot;},&quot;roundingUnit&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[100,500,1000],&quot;default&quot;:500,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;割り勘ルール&quot;}}">
+const BASE = { M2: 1.6, M1: 1.4, B4: 1.1, B3: 1.0 };
+const PRESETS = { "学年差あり": BASE, "均等": { M2: 1, M1: 1, B4: 1, B3: 1 }, "M2が多め": { M2: 2.2, M1: 1.4, B4: 1.0, B3: 1.0 } };
+const ORDER = ["M2", "M1", "B4", "B3"];
+const RED = "#c8402f";
+const STEP = 100;
+const yen = n => "¥" + Math.round(n).toLocaleString("ja-JP");
+
+class Component extends DCLogic {
+  state = {
+    total: 48000,
+    totalInput: "48000",
+    counts: { M2: 3, M1: 4, B4: 5, B3: 2 },
+    fixed: { M2: false, M1: false, B4: false, B3: false },
+    fixedAmt: { M2: 5000, M1: 4000, B4: 3000, B3: 2500 },
+    calculated: false,
+    inputsOpen: true,
+    adjust: null,
+    adjustName: "",
+    resultOpen: false,
+    final: null,
+    copied: false,
+    eventName: "",
+    shopName: "",
+    saved: false
+  };
+
+  baseWeights() { return PRESETS[this.props.weightPreset] || BASE; }
+  unit() { return this.props.roundingUnit ?? 500; }
+
+  // 固定分を差し引き、残りを比率で分配（切り捨て → 端数は正）
+  allocate(w) {
+    const { total, counts, fixed, fixedAmt } = this.state;
+    const unit = this.unit(), per = {};
+    let remaining = total;
+    ORDER.forEach(k => { if (fixed[k]) { per[k] = fixedAmt[k] || 0; remaining -= counts[k] * per[k]; } });
+    const open = ORDER.filter(k => !fixed[k]);
+    const denom = open.reduce((s, k) => s + counts[k] * w[k], 0);
+    const base = denom > 0 ? Math.max(0, remaining) / denom : 0;
+    open.forEach(k => { per[k] = Math.max(0, Math.floor(base * w[k] / unit) * unit); });
+    return per;
+  }
+
+  skew(bias) {
+    const w = this.baseWeights(), out = {};
+    ORDER.forEach((k, i) => { out[k] = Math.max(0.1, +(w[k] * (1 + bias * (3 - i) / 3)).toFixed(2)); });
+    return out;
+  }
+
+  rest(per) {
+    const { total, counts } = this.state;
+    return total - ORDER.reduce((s, k) => s + counts[k] * (per[k] || 0), 0);
+  }
+
+  reset(extra) { this.setState({ calculated: false, inputsOpen: true, adjust: null, resultOpen: false, ...extra }); }
+
+  renderVals() {
+    const s = this.state;
+    const shown = this.allocate(this.baseWeights());
+    const heads = ORDER.reduce((a, k) => a + s.counts[k], 0);
+
+    const grades = ORDER.map(k => {
+      const fx = s.fixed[k];
+      const val = fx ? s.fixedAmt[k] : (s.calculated ? shown[k] : 0);
+      return {
+        key: k, label: k, count: s.counts[k], locked: !fx,
+        amountInput: val.toLocaleString("ja-JP"),
+        fieldStyle: "display:flex;align-items:center;gap:3px;padding:6px 9px;border-radius:9px;background:#fff;border:1px solid " + (fx ? RED : "#ddd9d1"),
+        inputStyle: "width:78px;border:none;background:transparent;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:19.7px;font-weight:600;padding:0;color:" + (fx ? RED : "#1a1a19"),
+        fixBtnStyle: "flex:none;white-space:nowrap;line-height:1;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:11.6px;font-weight:700;letter-spacing:0.04em;cursor:pointer;transition:all .15s;" +
+          (fx ? "border:1px solid " + RED + ";background:" + RED + ";color:#fff" : "border:1px solid #e4e1da;background:#fff;color:#b3afa6"),
+        toggleFix: () => this.reset({
+          fixed: { ...s.fixed, [k]: !s.fixed[k] },
+          fixedAmt: s.fixed[k] ? s.fixedAmt : { ...s.fixedAmt, [k]: shown[k] || s.fixedAmt[k] }
+        }),
+        inc: () => this.reset({ counts: { ...s.counts, [k]: s.counts[k] + 1 } }),
+        dec: () => this.reset({ counts: { ...s.counts, [k]: Math.max(0, s.counts[k] - 1) } }),
+        onAmount: e => this.reset({ fixedAmt: { ...s.fixedAmt, [k]: parseInt(e.target.value.replace(/[^0-9]/g, ""), 10) || 0 } })
+      };
+    });
+
+    const plans = [
+      { name: "上級生を厚めに", bias: 0.3, label: "上級生 厚め", hue: "#3f6fb5", tint: "rgba(63,111,181,", ink: "#2f5b98" },
+      { name: "標準", bias: 0, label: "標準", hue: "#1f9d6b", tint: "rgba(31,157,107,", ink: "#178056" },
+      { name: "フラット寄りに", bias: -0.3, label: "フラット", hue: "#c98a1e", tint: "rgba(201,138,30,", ink: "#a06d10" }
+    ].map((p, pi, arr) => {
+      const per = this.allocate(this.skew(p.bias));
+      const rest = this.rest(per);
+      const others = arr.map(o => this.allocate(this.skew(o.bias)));
+      const varies = {};
+      ORDER.forEach(k => { varies[k] = others.some(o => o[k] !== per[k]); });
+      const std = others[1];
+      return {
+        name: p.name,
+        tintLabel: p.label,
+        cardStyle: "flex:1;min-width:0;background:#fff;border:1px solid " + p.tint + ".38);border-radius:13px;padding:0 9px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden",
+        tintStyle: "margin:0 -9px 4px;padding:9px 8px;background:" + p.tint + ".1);color:" + p.ink + ";border-bottom:2px solid " + p.hue + ";font-size:11px;font-weight:700;letter-spacing:0.04em;text-align:center;white-space:nowrap",
+        rest: yen(rest),
+        restRowStyle: "display:flex;align-items:center;justify-content:space-between;padding:10px 6px 2px;border-top:1px solid " + p.tint + ".22)",
+        restStyle: "font-family:'IBM Plex Mono',monospace;font-size:13.3px;font-weight:600;color:" + (rest < 0 ? RED : rest === 0 ? p.ink : "#1a1a19"),
+        btnStyle: "margin-top:auto;border:none;background:" + p.hue + ";color:#fff;font-family:inherit;font-size:12.2px;font-weight:700;letter-spacing:0.03em;padding:12px 4px;border-radius:8px;cursor:pointer",
+        rows: ORDER.map(k => {
+          const d = per[k] - std[k];
+          const diffs = varies[k] && !s.fixed[k];
+          return {
+            label: k, amount: yen(per[k]),
+            delta: !diffs ? "\u00a0" : d === 0 ? "基準" : (d > 0 ? "+" : "−") + Math.abs(d).toLocaleString("ja-JP"),
+            deltaStyle: "font-family:'IBM Plex Mono',monospace;font-size:10.4px;font-weight:700;line-height:13px;height:13px;margin-top:1px;color:" + (d === 0 ? "#a8a49b" : d > 0 ? p.ink : "#8a877f"),
+            rowStyle: "display:flex;flex-direction:column;border-radius:8px;overflow:hidden;border:1px solid " +
+              (s.fixed[k] ? "rgba(200,64,47,.35)" : diffs ? p.tint + ".35)" : "#ece9e2") + ";" +
+              (s.fixed[k] ? "background:rgba(200,64,47,.06)" : diffs ? "background:" + p.tint + ".08)" : "background:#fbfaf8"),
+            labelStyle: "font-family:'IBM Plex Mono',monospace;font-size:11.6px;font-weight:700;letter-spacing:0.04em;text-align:center;padding:4px 2px;color:" +
+              (s.fixed[k] ? "#fff" : diffs ? "#fff" : "#a8a49b") + ";background:" +
+              (s.fixed[k] ? RED : diffs ? p.hue : "#efece5"),
+            amountStyle: "font-family:'IBM Plex Mono',monospace;font-size:15.1px;font-weight:600;color:" + (s.fixed[k] ? RED : diffs ? p.ink : "#8a877f")
+          };
+        }),
+        choose: () => this.setState({ adjust: { ...per }, adjustName: p.name, resultOpen: false })
+      };
+    });
+
+    const adj = s.adjust || {};
+    const adjRest = s.adjust ? this.rest(adj) : 0;
+    const adjustRows = ORDER.filter(k => s.counts[k] > 0).map(k => {
+      const fx = s.fixed[k];
+      return {
+        label: k, tag: fx ? "固定" : "", sub: s.counts[k] + "人",
+        amount: yen(adj[k] || 0),
+        rowStyle: "display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:12px;padding:11px 13px;" +
+          (fx ? "background:rgba(200,64,47,.06);border:1px solid rgba(200,64,47,.45)" : "background:#fff;border:1px solid #e4e1da"),
+        labelStyle: "font-family:'IBM Plex Mono',monospace;font-size:18.6px;font-weight:600;color:" + (fx ? RED : "#1a1a19"),
+        tagStyle: "font-size:11px;font-weight:700;letter-spacing:0.06em;padding:2px 6px;border-radius:5px;color:#fff;background:" + (fx ? RED : "transparent"),
+        amountStyle: "font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;min-width:86px;text-align:right;color:" + (fx ? RED : "#1a1a19"),
+        inc: () => this.setState({ adjust: { ...adj, [k]: (adj[k] || 0) + STEP } }),
+        dec: () => this.setState({ adjust: { ...adj, [k]: Math.max(0, (adj[k] || 0) - STEP) } })
+      };
+    });
+
+    const fin = s.final || {};
+    const finRest = s.final ? this.rest(fin) : 0;
+
+    return {
+      grades, plans, adjustRows,
+      totalInput: s.totalInput,
+      headCountLabel: heads + "人",
+      onTotal: e => {
+        const v = e.target.value.replace(/[^0-9]/g, "");
+        this.reset({ totalInput: v, total: parseInt(v, 10) || 0 });
+      },
+      calculated: s.calculated,
+      calculate: () => this.setState({ calculated: true, inputsOpen: false }),
+      inputsOpen: !s.calculated || s.inputsOpen,
+      toggleInputs: () => this.setState(st => ({ inputsOpen: !st.inputsOpen })),
+      headerStyle: "display:flex;align-items:center;gap:8px;padding:13px 16px 11px;user-select:none;cursor:" + (s.calculated ? "pointer" : "default"),
+      caretStyle: "font-size:10.4px;color:#a8a49b;line-height:1;transition:transform .18s;transform:rotate(" + ((!s.calculated || s.inputsOpen) ? "0" : "-90") + "deg)",
+
+      adjustOpen: !!s.adjust,
+      adjustTitle: s.adjustName + " · 合計 " + yen(s.total),
+      closeAdjust: () => this.setState({ adjust: null }),
+      stop: e => e.stopPropagation(),
+      adjustRest: yen(adjRest),
+      adjustRestNote: adjRest === 0 ? "ぴったり" : adjRest > 0 ? "余り" : "不足しています",
+      restBoxStyle: "display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;margin-bottom:12px;" +
+        (adjRest === 0 ? "background:#e7f4ee;color:#1f9d6b" : adjRest > 0 ? "background:#fff;border:1px solid #e4e1da;color:#1a1a19" : "background:rgba(200,64,47,.08);color:" + RED),
+      confirmDisabled: adjRest < 0,
+      confirmLabel: adjRest < 0 ? "端数がマイナスです" : "この金額で確定",
+      confirmStyle: "width:100%;border:none;font-family:inherit;font-size:16.2px;font-weight:700;letter-spacing:0.04em;padding:15px;border-radius:12px;" +
+        (adjRest < 0 ? "background:#e4e1da;color:#a8a49b;cursor:not-allowed" : "background:#1a1a19;color:#fff;cursor:pointer"),
+      confirm: () => { if (adjRest >= 0) this.setState({ final: { ...adj }, adjust: null, resultOpen: true, copied: false, saved: false }); },
+
+      resultOpen: s.resultOpen,
+      closeResult: () => this.setState({ resultOpen: false }),
+      payers: ORDER.filter(k => s.counts[k] > 0).map(k => {
+        const fx = s.fixed[k];
+        return {
+          label: k, tag: fx ? "固定" : "", sub: s.counts[k] + "人",
+          amount: yen(fin[k] || 0),
+          rowStyle: "display:flex;align-items:center;justify-content:space-between;border-radius:12px;padding:13px 16px;" +
+            (fx ? "background:rgba(200,64,47,.06);border:1px solid rgba(200,64,47,.45)" : "background:#fff;border:1px solid #e4e1da"),
+          labelStyle: "font-family:'IBM Plex Mono',monospace;font-size:18.6px;font-weight:600;color:" + (fx ? RED : "#1a1a19"),
+          tagStyle: "font-size:11px;font-weight:700;letter-spacing:0.06em;padding:2px 6px;border-radius:5px;color:#fff;background:" + (fx ? RED : "transparent"),
+          amountStyle: "font-family:'IBM Plex Mono',monospace;font-size:23.2px;font-weight:600;color:" + (fx ? RED : "#1a1a19")
+        };
+      }),
+      summaryLeft: "合計 " + yen(s.total) + " / " + heads + "人",
+      summaryRight: finRest === 0 ? "端数なし" : "端数 " + yen(finRest),
+      eventName: s.eventName,
+      shopName: s.shopName,
+      onEventName: e => this.setState({ eventName: e.target.value, saved: false }),
+      onShopName: e => this.setState({ shopName: e.target.value, saved: false }),
+      saveLabel: s.saved ? "保存されました" : "保存",
+      saveStyle: "flex:none;white-space:nowrap;border:none;font-family:inherit;font-size:15.1px;font-weight:700;letter-spacing:0.04em;padding:13px 20px;border-radius:11px;" +
+        (s.saved ? "background:#e7f4ee;color:#1f9d6b;cursor:default" : "background:#1f9d6b;color:#fff;cursor:pointer"),
+      save: e => { e.stopPropagation(); this.setState({ saved: true }); },
+      copyLabel: s.copied ? "コピーしました" : "結果をコピー",
+      copyResult: e => {
+        e.stopPropagation();
+        const text = ORDER.filter(k => s.counts[k] > 0).map(k => k + " " + yen(fin[k] || 0)).join(" / ") + "（合計 " + yen(s.total) + "）";
+        if (navigator.clipboard) navigator.clipboard.writeText(text);
+        this.setState({ copied: true });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
