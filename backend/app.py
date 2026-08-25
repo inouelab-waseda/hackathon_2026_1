@@ -1,10 +1,8 @@
-"""研究室割り勘アプリ バックエンド.
+"""研究室割り勘アプリ バックエンド。"""
 
-現時点では疎通確認用のエンドポイントのみ。
-フェーズ2（端数貯金）で、計算 API と SQLite へのアクセスをここに足していく。
-"""
+from flask import Flask, jsonify, request
 
-from flask import Flask, jsonify
+from domain import calculate_plans, validate_input
 
 app = Flask(__name__)
 
@@ -13,6 +11,21 @@ app = Flask(__name__)
 def health():
     """疎通確認用。フロントから Vite の proxy 経由で叩かれる。"""
     return jsonify(status="ok", service="warikan-backend")
+
+
+@app.post("/api/calculate")
+def calculate():
+    """WarikanInputを受け取り、傾斜の異なるPlanを3案返す。"""
+    input_data = request.get_json(silent=True)
+    errors = validate_input(input_data)
+    if errors:
+        return jsonify(error="validation_failed", errors=errors), 400
+
+    try:
+        return jsonify(calculate_plans(input_data))
+    except (ValueError, RuntimeError) as error:
+        app.logger.exception("割り勘計算に失敗しました")
+        return jsonify(error="calculation_failed", errors=[str(error)]), 422
 
 
 if __name__ == "__main__":
