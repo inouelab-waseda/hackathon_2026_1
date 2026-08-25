@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -22,5 +23,10 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  test: {
+    // ドメイン層は React に依存しない純粋関数なので、ブラウザ環境は不要。
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
   },
 })
