@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .calculate import GRADES, MAX_SAFE_INTEGER
+from .constants import GRADES, MAX_SAFE_INTEGER
 
 
 def validate_input(input_data: Any) -> list[str]:
