@@ -64,7 +64,7 @@ const PLAN_THEME: Record<
   },
 }
 
-/** 3案を横スクロールで並べる。人数が0の学年は行ごと出さない。 */
+/** 3案を横に並べて最初から全部見せる。人数が0の学年は行ごと出さない。 */
 export default function PlanCardList({ plans, counts, fixed, onChoose, colored }: Props) {
   const visibleGrades = GRADES.filter((grade) => counts[grade] > 0)
   const standardPlan = plans.find((plan) => plan.id === 'standard') ?? plans[0]
@@ -77,19 +77,19 @@ export default function PlanCardList({ plans, counts, fixed, onChoose, colored }
   }
 
   return (
-    <div className="animate-fade-in no-scrollbar -mx-4 flex shrink-0 snap-x snap-mandatory gap-2.5 overflow-x-auto px-4 pb-1">
+    <div className="animate-fade-in flex shrink-0 gap-2">
       {plans.map((plan) => {
         const theme = PLAN_THEME[plan.id]
 
         return (
           <div
             key={plan.id}
-            className={`flex w-[78%] shrink-0 snap-start flex-col gap-2 overflow-hidden rounded-2xl border bg-card p-3 ${
+            className={`flex min-w-0 flex-1 flex-col gap-2 overflow-hidden rounded-2xl border bg-card p-2.5 ${
               colored ? theme.cardBorder : 'border-line'
             }`}
           >
             <div
-              className={`-mx-3 -mt-3 px-3 py-2 text-center text-[11px] font-bold tracking-wider ${
+              className={`-mx-2.5 -mt-2.5 px-2 py-1.5 text-center text-[10px] font-bold tracking-wider whitespace-nowrap ${
                 colored ? `${theme.headerBg} ${theme.headerText} ${theme.headerBorder}` : 'text-muted'
               }`}
             >
@@ -105,28 +105,40 @@ export default function PlanCardList({ plans, counts, fixed, onChoose, colored }
                 return (
                   <div
                     key={grade}
-                    className={`flex items-baseline justify-between gap-1 rounded-lg px-2 py-1 ${
-                      isFixed ? 'bg-alert/8 text-alert' : diffs ? `${theme.rowBgDiff} ${theme.amountTextDiff}` : 'bg-subtle text-ink'
+                    className={`flex flex-col overflow-hidden rounded-lg border ${
+                      isFixed
+                        ? 'border-alert/35 bg-alert/6'
+                        : diffs
+                          ? `border-transparent ${theme.rowBgDiff}`
+                          : 'border-line/60 bg-subtle'
                     }`}
                   >
-                    <span
-                      className={`rounded font-mono text-[11px] font-semibold ${
-                        diffs ? `${theme.labelBgDiff} px-1 text-white` : 'opacity-75'
+                    <div
+                      className={`text-center font-mono text-[9.5px] font-bold tracking-wide ${
+                        isFixed
+                          ? 'bg-alert text-white'
+                          : diffs
+                            ? `${theme.labelBgDiff} text-white`
+                            : 'text-faint'
                       }`}
                     >
                       {grade}
-                    </span>
-                    <div className="flex flex-col items-end">
-                      <span className="font-mono text-[13px] font-semibold">
+                    </div>
+                    <div className="flex flex-col items-center gap-px py-1">
+                      <span
+                        className={`font-mono text-[11.5px] font-semibold ${
+                          isFixed ? 'text-alert' : diffs ? theme.amountTextDiff : 'text-ink'
+                        }`}
+                      >
                         {yen(plan.perPerson[grade])}
                       </span>
-                      {diffs && (
-                        <span className="font-mono text-[9px] font-bold opacity-80">
-                          {delta === 0
+                      <span className="h-[11px] font-mono text-[8.5px] font-bold text-faint">
+                        {diffs
+                          ? delta === 0
                             ? '基準'
-                            : `${delta > 0 ? '+' : '−'}${Math.abs(delta).toLocaleString('ja-JP')}`}
-                        </span>
-                      )}
+                            : `${delta > 0 ? '+' : '−'}${Math.abs(delta).toLocaleString('ja-JP')}`
+                          : ' '}
+                      </span>
                     </div>
                   </div>
                 )
@@ -134,13 +146,13 @@ export default function PlanCardList({ plans, counts, fixed, onChoose, colored }
             </div>
 
             <div
-              className={`flex items-center justify-between border-t px-1 pt-2 ${
+              className={`flex items-center justify-between border-t px-0.5 pt-1.5 ${
                 colored ? theme.restBorder : 'border-line/60'
               }`}
             >
-              <span className="text-[9.5px] font-bold tracking-wide text-faint">余剰</span>
+              <span className="text-[9px] font-bold tracking-wide text-faint">余剰</span>
               <span
-                className={`font-mono text-[11.5px] font-semibold ${
+                className={`font-mono text-[10.5px] font-semibold ${
                   plan.surplus === 0 ? (colored ? theme.amountTextDiff : 'text-accent') : 'text-ink'
                 }`}
               >
@@ -151,7 +163,7 @@ export default function PlanCardList({ plans, counts, fixed, onChoose, colored }
             <button
               type="button"
               onClick={() => onChoose(plan)}
-              className={`mt-auto rounded-lg px-1 py-2.5 text-[11px] font-bold tracking-wide text-white ${
+              className={`mt-auto rounded-lg px-1 py-2 text-[10px] font-bold tracking-wide whitespace-nowrap text-white ${
                 colored ? theme.button : 'bg-ink active:bg-accent'
               }`}
             >
