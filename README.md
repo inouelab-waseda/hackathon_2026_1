@@ -74,13 +74,74 @@ docker compose up
 ## ディレクトリ構成
 
 ```
-compose.yml          … frontend / backend のサービス定義
-frontend/            … React + Vite（TypeScript）
+compose.yml            … frontend / backend のサービス定義
+frontend/
   src/
-    App.tsx          … 現在は疎通確認画面
-backend/             … Flask
-  app.py             … 現在は /api/health のみ
-docs/                … 設計ドキュメント
+    types/warikan.ts   … ドメインの型（= バックエンドとの API 契約）
+    domain/            … 計算ロジック（純粋関数・React に依存しない）
+      calculate.ts     … 3案を生成する ※現在はスタブ
+      constants.ts     … 傾斜係数・丸め単位・調整幅などの定数
+      settlement.ts    … 余剰金額の計算
+      validation.ts    … 入力チェック
+    state/             … 画面の状態と遷移（useReducer に集約）
+    storage/           … 履歴の保存 ※現在は localStorage
+    components/        … UI 部品
+    screens/           … 割り勘画面・履歴画面
+backend/               … Flask
+  app.py               … 現在は /api/health のみ
+docs/                  … 設計ドキュメント
+```
+
+## 何をしたいときに、どのファイルを触るか
+
+| やりたいこと | 触るファイル |
+|---|---|
+| **傾斜の係数を変える**（M1 を厚くする等） | `frontend/src/domain/constants.ts` の表の数値だけ |
+| **計算方法を差し替える**（飴玉モデルにする） | `frontend/src/domain/calculate.ts` の `calculatePlans` の中身だけ |
+| **履歴の保存先を API にする** | `frontend/src/storage/historyStore.ts` の `load` / `save` の中身だけ |
+| **API のリクエスト／レスポンスの形を決める** | `frontend/src/types/warikan.ts`（この型がそのまま契約） |
+| 画面の見た目を変える | `frontend/src/components/` |
+| 色・フォントを変える | `frontend/src/index.css` の `@theme` |
+| 画面の遷移やボタンの挙動を変える | `frontend/src/state/warikanReducer.ts` |
+
+**上の3つは、他のファイルを一切触らずに差し替えられるように作ってあります。** 型（入出力）が変わらない限り、画面側のコードには影響しません。
+
+## 現在の実装状況（2026-08-25 時点）
+
+動くもの：入力 → 計算 → 3案から選択 → 100円単位で調整 → 保存 → 履歴で確認、まで通しで操作できます。
+
+暫定・未確定のもの：
+
+| 箇所 | 状態 |
+|---|---|
+| `domain/calculate.ts` | **スタブ**。比率配分＋500円切り上げの簡易版。飴玉モデル（別紙 v2）への差し替えが必要 |
+| `domain/constants.ts` | 傾斜係数・丸め単位（500円）・調整幅（100円）は**チーム未合意の暫定値** |
+| `storage/historyStore.ts` | localStorage 保存。バックエンドができたら差し替え |
+| `state/warikanReducer.ts` の `initialState` | デモ用のサンプル値（合計48,000円 / 14人）が入っています。不要なら0に変えてください |
+| 状態1の店舗名入力 | **未実装**。プロトタイプ設計に合わせ、店名は結果シートのみに置いています |
+
+## スマホ対応について
+
+**スマートフォンからの利用を前提に作っています。** UI を変更するときは以下を崩さないでください。
+
+| 対応 | 内容 |
+|---|---|
+| 画面幅 | 375px（iPhone SE）〜430px で確認済み。横スクロールは3案のカードのみ |
+| 高さ | `h-dvh` を使用。モバイルブラウザのアドレスバー伸縮でレイアウトが崩れない |
+| タップ領域 | ±ボタンは **44×44px**。これより小さくすると指で押しにくく、隣を誤タップする |
+| 文字サイズ | **入力欄は16px以上**にすること。16px未満だと iOS Safari がフォーカス時に勝手に画面を拡大する |
+| セーフエリア | ノッチ・ホームインジケータを避けるため `.pt-safe` / `.pb-safe` を使う（`index.css` で定義） |
+| タップ挙動 | 灰色のハイライトを消し、`touch-action: manipulation` でダブルタップ判定の待ち時間をなくしてある |
+| キーボード | 金額・人数の入力は `inputMode="numeric"` で数字キーボードが出る |
+
+なお、実機（iOS Safari / Android Chrome）での確認はまだです。同じ Wi-Fi なら `docker compose up` した PC の IP に `:5173` を付けてスマホから開けます。
+
+## テスト
+
+計算ロジックと状態遷移には単体テストがあります。**計算を差し替えたら必ず実行してください**（差し替え前後で挙動が変わっていないかの確認になります）。
+
+```bash
+docker compose run --rm frontend npm run test
 ```
 
 ## 開発のルール
