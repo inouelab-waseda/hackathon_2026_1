@@ -25,6 +25,33 @@ describe('calculate', () => {
 })
 
 describe('入力変更との連動', () => {
+  it('固定金額の初期値は全学年で空欄として扱う0', () => {
+    expect(initialState.input.fixedAmounts).toEqual(byGrade(0))
+  })
+
+  it('固定中の金額を空にすると固定も解除される', () => {
+    const fixed = {
+      ...initialState,
+      input: {
+        ...initialState.input,
+        fixed: { ...initialState.input.fixed, M2: true },
+        fixedAmounts: { ...initialState.input.fixedAmounts, M2: 5000 },
+      },
+    }
+    const state = warikanReducer(fixed, { type: 'setFixedAmount', grade: 'M2', value: '' })
+    expect(state.input.fixed.M2).toBe(false)
+    expect(state.input.fixedAmounts.M2).toBe(0)
+  })
+
+  it('固定金額を入力すると自動で固定される', () => {
+    const state = warikanReducer(initialState, {
+      type: 'setFixedAmount',
+      grade: 'M2',
+      value: '5000',
+    })
+    expect(state.input.fixed.M2).toBe(true)
+  })
+
   it('人数を変えると計算結果が破棄される', () => {
     const state = warikanReducer(calculated(), { type: 'incCount', grade: 'M2' })
     expect(state.plans).toBeNull()

@@ -11,7 +11,6 @@ type Props = {
   onToggle: () => void
   onIncrement: (grade: Grade) => void
   onDecrement: (grade: Grade) => void
-  onToggleFix: (grade: Grade) => void
   onFixedAmountChange: (grade: Grade, value: string) => void
   onCalculate: () => void
 }
@@ -25,7 +24,6 @@ export default function GradeInputList({
   onToggle,
   onIncrement,
   onDecrement,
-  onToggleFix,
   onFixedAmountChange,
   onCalculate,
 }: Props) {
@@ -87,34 +85,63 @@ export default function GradeInputList({
                 </div>
 
                 <div className="flex min-w-0 flex-1 justify-end">
-                  {isFixed ? (
-                    <div className="flex items-center gap-1 rounded-[9px] border border-alert bg-card px-2.5 py-1.5">
-                      <span className="font-mono text-xs text-faint">¥</span>
-                      <input
-                        value={input.fixedAmounts[grade] === 0 ? '' : String(input.fixedAmounts[grade])}
-                        onChange={(event) => onFixedAmountChange(grade, event.target.value)}
-                        inputMode="numeric"
-                        placeholder="0"
-                        aria-label={`${grade}の固定金額`}
-                        className="w-16 border-none bg-transparent p-0 text-right font-mono text-[17px] font-semibold text-alert outline-none"
-                      />
-                    </div>
-                  ) : (
-                    <span className="pr-1 text-[11px] text-faint">自動で計算</span>
-                  )}
+                  <div
+                    className={`flex items-center gap-1 rounded-[9px] border bg-card px-2.5 py-1.5 transition-colors ${
+                      isFixed ? 'border-accent' : 'border-line'
+                    }`}
+                  >
+                    <span className="font-mono text-xs text-faint">¥</span>
+                    <input
+                      value={input.fixedAmounts[grade] === 0 ? '' : String(input.fixedAmounts[grade])}
+                      onChange={(event) => onFixedAmountChange(grade, event.target.value)}
+                      inputMode="numeric"
+                      placeholder="固定値"
+                      aria-label={`${grade}の固定金額`}
+                      className={`w-16 border-none bg-transparent p-0 text-right font-mono text-[17px] font-semibold outline-none transition-colors placeholder:text-[11px] placeholder:font-medium ${
+                        isFixed ? 'font-bold text-ink placeholder:text-faint' : 'text-ink placeholder:text-faint'
+                      }`}
+                    />
+                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => onToggleFix(grade)}
-                  className={`h-10 rounded-lg px-2.5 text-[10px] font-bold tracking-wider whitespace-nowrap transition-colors ${
-                    isFixed
-                      ? 'border border-alert bg-alert text-white'
-                      : 'border border-line bg-card text-faint'
+                <span
+                  role="img"
+                  aria-label={isFixed ? `${grade}は固定中` : `${grade}は未固定`}
+                  title={isFixed ? '固定中' : '固定値を入力すると固定されます'}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center transition-colors ${
+                    isFixed ? 'text-accent' : 'text-faint/60'
                   }`}
                 >
-                  固定
-                </button>
+                  {isFixed ? (
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      className="h-[18px] w-[18px]"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="5" y="10" width="14" height="10" rx="2" />
+                      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                    </svg>
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      className="h-[18px] w-[18px]"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="5" y="10" width="14" height="10" rx="2" />
+                      <path d="M8 10V7a4 4 0 0 1 7.5-2" />
+                    </svg>
+                  )}
+                </span>
               </div>
             )
           })}
