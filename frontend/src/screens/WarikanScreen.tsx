@@ -17,6 +17,8 @@ type Props = {
 export default function WarikanScreen({ onSaved }: Props) {
   const { state, actions, inputsOpen, sheetSurplus } = useWarikan()
   const [saveError, setSaveError] = useState<string | null>(null)
+  // 比較用の一時トグル。参考デザインの色分け表示と現行の配色を見比べるためのもの。
+  const [colored, setColored] = useState(false)
 
   const handleSave = () => {
     if (state.sheet.kind !== 'result') return
@@ -68,12 +70,22 @@ export default function WarikanScreen({ onSaved }: Props) {
         />
 
         {state.plans !== null && (
-          <PlanCardList
-            plans={state.plans}
-            counts={state.input.counts}
-            fixed={state.input.fixed}
-            onChoose={actions.choosePlan}
-          />
+          <>
+            <button
+              type="button"
+              onClick={() => setColored((value) => !value)}
+              className="self-end text-[10.5px] font-bold tracking-wide text-faint underline underline-offset-2"
+            >
+              {colored ? '配色なしで見る' : '配色ありで見る'}
+            </button>
+            <PlanCardList
+              plans={state.plans}
+              counts={state.input.counts}
+              fixed={state.input.fixed}
+              onChoose={actions.choosePlan}
+              colored={colored}
+            />
+          </>
         )}
 
         <p className="shrink-0 px-1 text-[11px] leading-relaxed text-faint">
