@@ -144,7 +144,7 @@ describe('シートの遷移', () => {
     expect(down.sheet.kind === 'adjust' && down.sheet.amounts.M2).toBe(0)
   })
 
-  it('不足している状態では確定できない', () => {
+  it('不足している状態でも幹事立て替えとして確定できる', () => {
     const base = calculated()
     let state = warikanReducer(base, { type: 'choosePlan', plan: base.plans![0] })
     // 全学年を0円にすれば必ず不足する
@@ -154,7 +154,7 @@ describe('シートの遷移', () => {
       }
     }
     const confirmed = warikanReducer(state, { type: 'confirmAdjust' })
-    expect(confirmed.sheet.kind).toBe('adjust')
+    expect(confirmed.sheet.kind).toBe('result')
   })
 
   it('余剰が0以上なら確定して結果シートへ進む', () => {

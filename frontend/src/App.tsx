@@ -13,13 +13,21 @@ import HistoryScreen from './screens/HistoryScreen'
 export default function App() {
   const [screen, setScreen] = useState<ScreenName>('warikan')
   const [records, setRecords] = useState<SettlementRecord[]>([])
+  const [historyError, setHistoryError] = useState<string | null>(null)
 
   // 保存直後と初回表示で履歴を読み直す
-  const reloadRecords = useCallback(() => {
-    setRecords(load())
+  const reloadRecords = useCallback(async () => {
+    try {
+      setRecords(await load())
+      setHistoryError(null)
+    } catch (error) {
+      setHistoryError(error instanceof Error ? error.message : '履歴を取得できませんでした。')
+    }
   }, [])
 
-  useEffect(reloadRecords, [reloadRecords])
+  useEffect(() => {
+    void reloadRecords()
+  }, [reloadRecords])
 
   return (
     <div className="flex min-h-dvh justify-center overflow-x-hidden">
@@ -27,9 +35,13 @@ export default function App() {
       {/* 画面の高さぴったりに固定し、中身だけをスクロールさせる（下のタブを常に見せる） */}
       <div className="relative flex h-dvh w-full max-w-[430px] min-w-0 flex-col overflow-hidden bg-paper">
         {screen === 'warikan' ? (
-          <WarikanScreen onSaved={reloadRecords} />
+          <WarikanScreen onSaved={() => void reloadRecords()} />
         ) : (
-          <HistoryScreen records={records} />
+          <HistoryScreen
+            records={records}
+            error={historyError}
+            onRetry={() => void reloadRecords()}
+          />
         )}
         <BottomTabBar current={screen} onChange={setScreen} />
       </div>

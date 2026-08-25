@@ -36,10 +36,32 @@ def close_db(_error: BaseException | None = None) -> None:
 
 
 def init_db() -> None:
-    """schema.sqlを適用し、必要なテーブルを作成する。"""
+    """schema.sqlを適用し、旧スキーマならデータを保ったまま移行する。"""
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
     with open(schema_path, encoding="utf-8") as schema_file:
-        get_db().executescript(schema_file.read())
+        schema = schema_file.read()
+
+    connection = get_db()
+    settlements_table = connection.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'settlements'"
+    ).fetchone()
+    if settlements_table is None:
+        connection.executescript(schema)
+        return
+
+    columns = {
+        row["name"] for row in connection.execute("PRAGMA table_info(settlements)")
+    }
+    normalized_sql = "".join((settlements_table["sql"] or "").lower().split())
+    requires_migration = (
+        "has_payer_contribution" not in columns
+        or "payer_contribution_amount" not in columns
+        or "check(surplus>=0)" in normalized_sql
+    )
+    if requires_migration:
+        _migrate_settlements(connection, schema, columns)
+    else:
+        connection.executescript(schema)
 
 
 def init_app(app: Flask) -> None:
@@ -164,3 +186,73 @@ def _normalize_optional_text(value: Any) -> str | None:
         return None
     normalized = value.strip()
     return normalized or None
+
+
+def _migrate_settlements(
+    connection: sqlite3.Connection,
+    schema: str,
+    existing_columns: set[str],
+) -> None:
+    """旧決済テーブルを現在の立て替え対応スキーマへ移行する。"""
+    has_grade_table = connection.execute(
+        """
+        SELECT 1 FROM sqlite_master
+        WHERE type = 'table' AND name = 'settlement_grades'
+        """
+    ).fetchone() is not None
+    contribution_flag = (
+        "has_payer_contribution"
+        if "has_payer_contribution" in existing_columns
+        else "CASE WHEN surplus < 0 THEN 1 ELSE 0 END"
+    )
+    contribution_amount = (
+        "payer_contribution_amount"
+        if "payer_contribution_amount" in existing_columns
+        else "CASE WHEN surplus < 0 THEN -surplus ELSE 0 END"
+    )
+    rename_grades = (
+        "ALTER TABLE settlement_grades RENAME TO settlement_grades_legacy;"
+        if has_grade_table
+        else ""
+    )
+    copy_grades = (
+        """
+        INSERT INTO settlement_grades (
+            settlement_id, grade, head_count, amount_per_person
+        )
+        SELECT settlement_id, grade, head_count, amount_per_person
+        FROM settlement_grades_legacy;
+        DROP TABLE settlement_grades_legacy;
+        """
+        if has_grade_table
+        else ""
+    )
+
+    connection.commit()
+    connection.execute("PRAGMA foreign_keys = OFF")
+    try:
+        connection.executescript(
+            f"""
+            BEGIN IMMEDIATE;
+            {rename_grades}
+            ALTER TABLE settlements RENAME TO settlements_legacy;
+            DROP INDEX IF EXISTS idx_settlements_saved_at;
+            {schema}
+            INSERT INTO settlements (
+                id, saved_at, event_name, shop_name, total_amount, surplus,
+                has_payer_contribution, payer_contribution_amount
+            )
+            SELECT id, saved_at, event_name, shop_name, total_amount, surplus,
+                   {contribution_flag}, {contribution_amount}
+            FROM settlements_legacy;
+            {copy_grades}
+            DROP TABLE settlements_legacy;
+            COMMIT;
+            """
+        )
+    except sqlite3.Error:
+        if connection.in_transaction:
+            connection.rollback()
+        raise
+    finally:
+        connection.execute("PRAGMA foreign_keys = ON")

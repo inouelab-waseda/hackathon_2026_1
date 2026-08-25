@@ -15,7 +15,7 @@ type Props = {
 
 /**
  * 調整シート（シートの第1段階）。
- * 100円単位で負担額を動かし、余剰が不足（負）のあいだは確定させない。
+ * 100円単位で負担額を動かす。不足分は幹事の立て替えとして確定できる。
  */
 export default function AdjustSheet({
   input,
@@ -105,11 +105,15 @@ export default function AdjustSheet({
               : 'border border-line bg-card text-ink'
         }`}
       >
-        <span className="text-[11px] font-bold tracking-[0.08em]">余剰</span>
+        <span className="text-[11px] font-bold tracking-[0.08em]">
+          {isShortage ? '幹事立て替え' : '余剰'}
+        </span>
         <div className="flex items-baseline gap-2">
-          <span className="font-mono text-[19px] font-semibold">{yen(surplus)}</span>
+          <span className="font-mono text-[19px] font-semibold">
+            {yen(isShortage ? -surplus : surplus)}
+          </span>
           <span className="text-[11px] font-bold">
-            {isShortage ? '不足しています' : surplus === 0 ? 'ぴったり' : '余り'}
+            {isShortage ? '幹事が補います' : surplus === 0 ? 'ぴったり' : '余り'}
           </span>
         </div>
       </div>
@@ -117,12 +121,9 @@ export default function AdjustSheet({
       <button
         type="button"
         onClick={onConfirm}
-        disabled={isShortage}
-        className={`w-full rounded-xl py-4 text-sm font-bold tracking-wide ${
-          isShortage ? 'cursor-not-allowed bg-line text-faint' : 'bg-ink text-white active:bg-accent'
-        }`}
+        className="w-full rounded-xl bg-ink py-4 text-sm font-bold tracking-wide text-white active:bg-accent"
       >
-        {isShortage ? '支払い金額に足りません' : 'この金額で決定'}
+        {isShortage ? '幹事が差額を立て替えて決定' : 'この金額で決定'}
       </button>
     </>
   )
