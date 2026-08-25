@@ -7,6 +7,8 @@ type Props = {
   open: boolean
   /** 未計算のうちは折りたためない */
   collapsible: boolean
+  /** 計算をバックエンドに依頼して待っている間は true */
+  isCalculating: boolean
   errors: string[]
   onToggle: () => void
   onIncrement: (grade: Grade) => void
@@ -20,6 +22,7 @@ export default function GradeInputList({
   input,
   open,
   collapsible,
+  isCalculating,
   errors,
   onToggle,
   onIncrement,
@@ -160,9 +163,14 @@ export default function GradeInputList({
             <button
               type="button"
               onClick={onCalculate}
-              className="rounded-[10px] bg-ink px-5 py-3 text-[12.5px] font-bold tracking-wider text-white active:bg-accent"
+              disabled={isCalculating}
+              className={`rounded-[10px] px-5 py-3 text-[12.5px] font-bold tracking-wider ${
+                isCalculating
+                  ? 'cursor-not-allowed bg-line text-faint'
+                  : 'bg-ink text-white active:bg-accent'
+              }`}
             >
-              計算する
+              {isCalculating ? '計算中…' : '計算する'}
             </button>
           </div>
         </div>

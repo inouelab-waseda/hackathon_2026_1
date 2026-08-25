@@ -2,25 +2,60 @@ import { describe, expect, it } from 'vitest'
 import { initialState, warikanReducer } from './warikanReducer'
 import type { WarikanState } from './warikanReducer'
 import { byGrade } from '../types/warikan'
+import type { Plan } from '../types/warikan'
 
-/** 計算済みの状態を作る。 */
+/** バックエンドが返す3案を模したデータ。合計48,000円 / M2:3 M1:4 B4:5 B3:2 に対応する。 */
+const apiPlans: Plan[] = [
+  {
+    id: 'steep',
+    name: '案A',
+    perPerson: { M2: 5000, M1: 3500, B4: 3000, B3: 2000 },
+    surplus: 0,
+  },
+  {
+    id: 'standard',
+    name: '案B',
+    perPerson: { M2: 4000, M1: 4000, B4: 3000, B3: 2500 },
+    surplus: 0,
+  },
+  {
+    id: 'flat',
+    name: '案C',
+    perPerson: { M2: 3500, M1: 3500, B4: 3500, B3: 3000 },
+    surplus: 0,
+  },
+]
+
+/** 計算が成功した状態を作る（実際の通信は state 層の外で行われる）。 */
 function calculated(): WarikanState {
-  return warikanReducer(initialState, { type: 'calculate' })
+  const started = warikanReducer(initialState, { type: 'calculateStarted' })
+  return warikanReducer(started, { type: 'calculateSucceeded', plans: apiPlans })
 }
 
-describe('calculate', () => {
-  it('正常な入力なら3案が生成され、入力欄が折りたたまれる', () => {
-    const state = calculated()
-    expect(state.plans).toHaveLength(3)
-    expect(state.inputsOpen).toBe(false)
+describe('計算の開始・成功・失敗', () => {
+  it('開始すると待機状態になり、古い提案とエラーが消える', () => {
+    const state = warikanReducer(calculated(), { type: 'calculateStarted' })
+    expect(state.isCalculating).toBe(true)
+    expect(state.plans).toBeNull()
     expect(state.errors).toEqual([])
   })
 
-  it('バリデーションNGなら計算せずエラーだけを持つ', () => {
-    const empty = { ...initialState, input: { ...initialState.input, totalAmount: 0 } }
-    const state = warikanReducer(empty, { type: 'calculate' })
+  it('成功すると3案が入り、入力欄が折りたたまれる', () => {
+    const state = calculated()
+    expect(state.isCalculating).toBe(false)
+    expect(state.plans).toHaveLength(3)
+    expect(state.inputsOpen).toBe(false)
+  })
+
+  it('失敗するとエラーだけが残り、提案は入らない', () => {
+    const started = warikanReducer(initialState, { type: 'calculateStarted' })
+    const state = warikanReducer(started, {
+      type: 'calculateFailed',
+      errors: ['サーバーに接続できませんでした。通信環境を確認してください。'],
+    })
+    expect(state.isCalculating).toBe(false)
     expect(state.plans).toBeNull()
-    expect(state.errors.length).toBeGreaterThan(0)
+    expect(state.errors).toHaveLength(1)
   })
 })
 
@@ -56,6 +91,13 @@ describe('入力変更との連動', () => {
     const state = warikanReducer(calculated(), { type: 'incCount', grade: 'M2' })
     expect(state.plans).toBeNull()
     expect(state.inputsOpen).toBe(true)
+  })
+
+  it('計算の依頼中に入力を変えると待機状態が解除される', () => {
+    const started = warikanReducer(initialState, { type: 'calculateStarted' })
+    const state = warikanReducer(started, { type: 'setTotal', value: '30000' })
+    expect(state.isCalculating).toBe(false)
+    expect(state.plans).toBeNull()
   })
 
   it('合計金額を変えると計算結果が破棄される', () => {

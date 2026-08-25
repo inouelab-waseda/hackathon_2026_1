@@ -58,12 +58,13 @@ export default function WarikanScreen({ onSaved }: Props) {
           input={state.input}
           open={inputsOpen}
           collapsible={state.plans !== null}
+          isCalculating={state.isCalculating}
           errors={state.errors}
           onToggle={actions.toggleInputs}
           onIncrement={actions.incCount}
           onDecrement={actions.decCount}
           onFixedAmountChange={actions.setFixedAmount}
-          onCalculate={actions.calculate}
+          onCalculate={() => void actions.calculate()}
         />
 
         {state.plans !== null && (
