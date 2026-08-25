@@ -4,9 +4,6 @@ import { calculatePlans } from '../domain/calculate'
 import { validateInput } from '../domain/validation'
 import { calcSurplus } from '../domain/settlement'
 
-/** 微調整の1回あたりの増減額。 */
-export const ADJUST_STEP = 100
-
 /**
  * 開いているシート。判別可能なユニオンにすることで
  * 「調整シートと結果シートが同時に開いている」といった不正な状態を作れなくする。

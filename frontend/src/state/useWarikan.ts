@@ -1,6 +1,7 @@
 import { useMemo, useReducer } from 'react'
 import type { Grade, Plan } from '../types/warikan'
-import { ADJUST_STEP, initialState, warikanReducer } from './warikanReducer'
+import { initialState, warikanReducer } from './warikanReducer'
+import { ADJUST_STEP } from '../domain/constants'
 import { calcSurplus } from '../domain/settlement'
 
 /**

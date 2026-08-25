@@ -13,13 +13,10 @@
 
 import { GRADES, byGrade } from '../types/warikan'
 import type { ByGrade, Plan, WarikanInput } from '../types/warikan'
-import { WEIGHT_PRESETS } from './weights'
+import { ROUNDING_UNIT, WEIGHT_PRESETS } from './constants'
 import { calcSurplus } from './settlement'
 
-/** 1人あたりの金額を丸める単位。「きりの良い金額」にするため500円刻みにする。 */
-export const ROUNDING_UNIT = 500
-
-/** 3案（上級生を厚めに / 標準 / フラット寄りに）をまとめて生成する。 */
+/** 3案（案A / 案B / 案C）をまとめて生成する。 */
 export function calculatePlans(input: WarikanInput): Plan[] {
   return WEIGHT_PRESETS.map((preset) => {
     const perPerson = allocate(input, preset.weights)

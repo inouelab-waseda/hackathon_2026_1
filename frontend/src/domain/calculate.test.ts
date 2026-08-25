@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { ROUNDING_UNIT, calculatePlans } from './calculate'
+import { calculatePlans } from './calculate'
+import { ROUNDING_UNIT } from './constants'
 import { GRADES, byGrade } from '../types/warikan'
 import type { WarikanInput } from '../types/warikan'
 

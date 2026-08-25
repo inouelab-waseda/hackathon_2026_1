@@ -1,4 +1,18 @@
+/**
+ * 割り勘のルールを決める定数をまとめたファイル。
+ *
+ * **チームで「値をどうするか」を議論する対象はすべてここに集める。**
+ * 数値を変えたいときにコード中を探し回らなくて済むようにするのが目的なので、
+ * 計算式やロジックはここには書かず、`calculate.ts` 側に置く。
+ */
+
 import type { ByGrade } from '../types/warikan'
+
+/** 1人あたりの金額を丸める単位。「きりの良い金額」にするため500円刻みにする。 */
+export const ROUNDING_UNIT = 500
+
+/** 調整シートで ± を1回押したときの増減額。 */
+export const ADJUST_STEP = 100
 
 /** 3案を識別する ID。 */
 export type PlanId = 'steep' | 'standard' | 'flat'

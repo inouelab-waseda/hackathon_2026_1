@@ -1,7 +1,7 @@
 import { GRADES } from '../types/warikan'
 import type { ByGrade, Grade, WarikanInput } from '../types/warikan'
 import { yen } from '../lib/format'
-import { ADJUST_STEP } from '../state/warikanReducer'
+import { ADJUST_STEP } from '../domain/constants'
 
 type Props = {
   input: WarikanInput
@@ -26,7 +26,7 @@ export default function AdjustSheet({
   onDecrease,
   onConfirm,
 }: Props) {
-  const shortage = surplus < 0
+  const isShortage = surplus < 0
   const visibleGrades = GRADES.filter((grade) => input.counts[grade] > 0)
 
   return (
@@ -98,7 +98,7 @@ export default function AdjustSheet({
 
       <div
         className={`mb-3 flex items-center justify-between rounded-xl px-3.5 py-3 ${
-          shortage
+          isShortage
             ? 'bg-alert/8 text-alert'
             : surplus === 0
               ? 'bg-accent/12 text-accent'
@@ -109,7 +109,7 @@ export default function AdjustSheet({
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-[19px] font-semibold">{yen(surplus)}</span>
           <span className="text-[11px] font-bold">
-            {shortage ? '不足しています' : surplus === 0 ? 'ぴったり' : '余り'}
+            {isShortage ? '不足しています' : surplus === 0 ? 'ぴったり' : '余り'}
           </span>
         </div>
       </div>
@@ -117,12 +117,12 @@ export default function AdjustSheet({
       <button
         type="button"
         onClick={onConfirm}
-        disabled={shortage}
+        disabled={isShortage}
         className={`w-full rounded-xl py-4 text-sm font-bold tracking-wide ${
-          shortage ? 'cursor-not-allowed bg-line text-faint' : 'bg-ink text-white active:bg-accent'
+          isShortage ? 'cursor-not-allowed bg-line text-faint' : 'bg-ink text-white active:bg-accent'
         }`}
       >
-        {shortage ? '支払い金額に足りません' : 'この金額で決定'}
+        {isShortage ? '支払い金額に足りません' : 'この金額で決定'}
       </button>
     </>
   )

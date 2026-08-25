@@ -33,7 +33,7 @@ export default function ResultSheet({
   onShopNameChange,
   onSave,
 }: Props) {
-  const [copied, setCopied] = useState(false)
+  const [isCopied, setCopied] = useState(false)
   const visibleGrades = GRADES.filter((grade) => input.counts[grade] > 0)
 
   const handleCopy = () => {
@@ -126,7 +126,7 @@ export default function ResultSheet({
           onClick={handleCopy}
           className="rounded-xl border border-line bg-card px-4 py-3.5 text-[13px] font-bold tracking-wide text-ink"
         >
-          {copied ? 'コピーしました' : '結果をコピー'}
+          {isCopied ? 'コピーしました' : '結果をコピー'}
         </button>
         <button
           type="button"

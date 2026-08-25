@@ -80,7 +80,7 @@ frontend/
     types/warikan.ts   … ドメインの型（= バックエンドとの API 契約）
     domain/            … 計算ロジック（純粋関数・React に依存しない）
       calculate.ts     … 3案を生成する ※現在はスタブ
-      weights.ts       … 3案の傾斜係数（暫定値）
+      constants.ts     … 傾斜係数・丸め単位・調整幅などの定数
       settlement.ts    … 余剰金額の計算
       validation.ts    … 入力チェック
     state/             … 画面の状態と遷移（useReducer に集約）
@@ -96,7 +96,7 @@ docs/                  … 設計ドキュメント
 
 | やりたいこと | 触るファイル |
 |---|---|
-| **傾斜の係数を変える**（M1 を厚くする等） | `frontend/src/domain/weights.ts` の表の数値だけ |
+| **傾斜の係数を変える**（M1 を厚くする等） | `frontend/src/domain/constants.ts` の表の数値だけ |
 | **計算方法を差し替える**（飴玉モデルにする） | `frontend/src/domain/calculate.ts` の `calculatePlans` の中身だけ |
 | **履歴の保存先を API にする** | `frontend/src/storage/historyStore.ts` の `load` / `save` の中身だけ |
 | **API のリクエスト／レスポンスの形を決める** | `frontend/src/types/warikan.ts`（この型がそのまま契約） |
@@ -115,7 +115,7 @@ docs/                  … 設計ドキュメント
 | 箇所 | 状態 |
 |---|---|
 | `domain/calculate.ts` | **スタブ**。比率配分＋500円切り上げの簡易版。飴玉モデル（別紙 v2）への差し替えが必要 |
-| `domain/weights.ts` | 傾斜係数は**チーム未合意の暫定値** |
+| `domain/constants.ts` | 傾斜係数・丸め単位（500円）・調整幅（100円）は**チーム未合意の暫定値** |
 | `storage/historyStore.ts` | localStorage 保存。バックエンドができたら差し替え |
 | `state/warikanReducer.ts` の `initialState` | デモ用のサンプル値（合計48,000円 / 14人）が入っています。不要なら0に変えてください |
 | 状態1の店舗名入力 | **未実装**。プロトタイプ設計に合わせ、店名は結果シートのみに置いています |
