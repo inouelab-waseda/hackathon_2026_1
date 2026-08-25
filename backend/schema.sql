@@ -4,7 +4,10 @@ CREATE TABLE IF NOT EXISTS settlements (
     event_name TEXT,
     shop_name TEXT,
     total_amount INTEGER NOT NULL CHECK (total_amount > 0),
-    surplus INTEGER NOT NULL CHECK (surplus >= 0)
+    -- 負なら徴収額が不足しており、担当者が差額を立て替えたことを意味する
+    surplus INTEGER NOT NULL,
+    has_payer_contribution INTEGER NOT NULL CHECK (has_payer_contribution IN (0, 1)),
+    payer_contribution_amount INTEGER NOT NULL CHECK (payer_contribution_amount >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS settlement_grades (

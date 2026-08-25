@@ -62,8 +62,9 @@ def create_settlement(input_data: dict[str, Any]) -> dict[str, Any]:
         connection.execute(
             """
             INSERT INTO settlements (
-                id, saved_at, event_name, shop_name, total_amount, surplus
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                id, saved_at, event_name, shop_name, total_amount, surplus,
+                has_payer_contribution, payer_contribution_amount
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 settlement_id,
@@ -72,6 +73,8 @@ def create_settlement(input_data: dict[str, Any]) -> dict[str, Any]:
                 shop_name,
                 input_data["totalAmount"],
                 input_data["surplus"],
+                int(input_data["hasPayerContribution"]),
+                input_data["payerContributionAmount"],
             ),
         )
         connection.executemany(
@@ -102,6 +105,8 @@ def create_settlement(input_data: dict[str, Any]) -> dict[str, Any]:
             grade: input_data["perPerson"][grade] for grade in GRADES
         },
         "surplus": input_data["surplus"],
+        "hasPayerContribution": input_data["hasPayerContribution"],
+        "payerContributionAmount": input_data["payerContributionAmount"],
     }
 
 
@@ -110,7 +115,8 @@ def list_settlements() -> list[dict[str, Any]]:
     connection = get_db()
     settlement_rows = connection.execute(
         """
-        SELECT id, saved_at, event_name, shop_name, total_amount, surplus
+        SELECT id, saved_at, event_name, shop_name, total_amount, surplus,
+               has_payer_contribution, payer_contribution_amount
         FROM settlements
         ORDER BY saved_at DESC, rowid DESC
         """
@@ -142,6 +148,12 @@ def list_settlements() -> list[dict[str, Any]]:
                     for grade in GRADES
                 },
                 "surplus": settlement["surplus"],
+                "hasPayerContribution": bool(
+                    settlement["has_payer_contribution"]
+                ),
+                "payerContributionAmount": settlement[
+                    "payer_contribution_amount"
+                ],
             }
         )
     return records

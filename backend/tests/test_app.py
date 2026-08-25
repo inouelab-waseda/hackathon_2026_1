@@ -17,6 +17,8 @@ def settlement_input():
         "counts": {"M2": 3, "M1": 4, "B4": 5, "B3": 2},
         "perPerson": {"M2": 5000, "M1": 4000, "B4": 2500, "B3": 2500},
         "surplus": 500,
+        "hasPayerContribution": False,
+        "payerContributionAmount": 0,
     }
 
 
