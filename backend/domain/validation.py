@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .constants import GRADES, MAX_SAFE_INTEGER
+from .constants import GRADES, MAX_SAFE_INTEGER, MAX_SETTLEMENT_TEXT_LENGTH
 
 
 def validate_input(input_data: Any) -> list[str]:
@@ -101,6 +101,84 @@ def validate_input(input_data: Any) -> list[str]:
             errors.append(
                 "固定額の合計が支払額を超えています。固定額を下げてください。"
             )
+
+    return errors
+
+
+def validate_settlement_input(input_data: Any) -> list[str]:
+    """決済履歴APIへ保存するデータを検証する。"""
+    if not isinstance(input_data, dict):
+        return ["JSONオブジェクトを送信してください。"]
+
+    errors: list[str] = []
+    total_amount = input_data.get("totalAmount")
+    surplus = input_data.get("surplus")
+    counts = input_data.get("counts")
+    per_person = input_data.get("perPerson")
+
+    if not _is_safe_integer(total_amount) or total_amount <= 0:
+        errors.append("合計金額は1円以上の整数で指定してください。")
+    if not _is_safe_integer(surplus) or surplus < 0:
+        errors.append("余剰金額は0円以上の整数で指定してください。")
+    if not isinstance(counts, dict):
+        errors.append("人数を学年ごとのオブジェクトで指定してください。")
+    if not isinstance(per_person, dict):
+        errors.append("1人あたり金額を学年ごとのオブジェクトで指定してください。")
+
+    for field, label in (("eventName", "行事名"), ("shopName", "店名")):
+        value = input_data.get(field)
+        if value is not None and not isinstance(value, str):
+            errors.append(label + "は文字列またはnullで指定してください。")
+        elif isinstance(value, str) and len(value.strip()) > MAX_SETTLEMENT_TEXT_LENGTH:
+            errors.append(
+                label
+                + f"は{MAX_SETTLEMENT_TEXT_LENGTH}文字以内で指定してください。"
+            )
+
+    if not isinstance(counts, dict) or not isinstance(per_person, dict):
+        return errors
+
+    invalid_count_grades = [
+        grade
+        for grade in GRADES
+        if not _is_safe_integer(counts.get(grade)) or counts[grade] < 0
+    ]
+    if invalid_count_grades:
+        errors.append(
+            "人数は0以上の整数で指定してください（"
+            + "・".join(invalid_count_grades)
+            + "）。"
+        )
+
+    invalid_amount_grades = [
+        grade
+        for grade in GRADES
+        if not _is_safe_integer(per_person.get(grade))
+        or per_person[grade] < 0
+    ]
+    if invalid_amount_grades:
+        errors.append(
+            "1人あたり金額は0円以上の整数で指定してください（"
+            + "・".join(invalid_amount_grades)
+            + "）。"
+        )
+
+    if not invalid_count_grades and sum(counts[grade] for grade in GRADES) == 0:
+        errors.append("人数を1人以上指定してください。")
+
+    if (
+        not invalid_count_grades
+        and not invalid_amount_grades
+        and _is_safe_integer(total_amount)
+        and total_amount > 0
+        and _is_safe_integer(surplus)
+        and surplus >= 0
+    ):
+        collected = sum(
+            counts[grade] * per_person[grade] for grade in GRADES
+        )
+        if not _is_safe_integer(collected) or collected - total_amount != surplus:
+            errors.append("徴収合計と余剰金額が一致しません。")
 
     return errors
 

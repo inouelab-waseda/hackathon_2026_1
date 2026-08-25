@@ -25,10 +25,14 @@ services:
       - "5001:5000"
     volumes:
       - ./backend:/app
+      # SQLiteの実体をコンテナ再作成後も保持する
+      - backend_data:/data
     environment:
       - FLASK_APP=app.py
       # コード変更時に自動リロードする
       - FLASK_DEBUG=1
+      - DATABASE_PATH=/data/warikan.sqlite3
 
 volumes:
   frontend_node_modules:
+  backend_data:
