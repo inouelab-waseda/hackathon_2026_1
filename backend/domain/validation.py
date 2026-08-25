@@ -113,13 +113,36 @@ def validate_settlement_input(input_data: Any) -> list[str]:
     errors: list[str] = []
     total_amount = input_data.get("totalAmount")
     surplus = input_data.get("surplus")
+    has_payer_contribution = input_data.get("hasPayerContribution")
+    payer_contribution_amount = input_data.get("payerContributionAmount")
     counts = input_data.get("counts")
     per_person = input_data.get("perPerson")
 
     if not _is_safe_integer(total_amount) or total_amount <= 0:
         errors.append("合計金額は1円以上の整数で指定してください。")
-    if not _is_safe_integer(surplus) or surplus < 0:
-        errors.append("余剰金額は0円以上の整数で指定してください。")
+    # 負の余剰金額は「徴収額が不足しており、担当者が差額を立て替えた」ことを意味するので許容する
+    if not _is_safe_integer(surplus):
+        errors.append("余剰金額は整数で指定してください。")
+    if not isinstance(has_payer_contribution, bool):
+        errors.append("差額の有無(hasPayerContribution)は真偽値で指定してください。")
+    if not _is_safe_integer(payer_contribution_amount) or payer_contribution_amount < 0:
+        errors.append(
+            "立て替え金額(payerContributionAmount)は0円以上の整数で指定してください。"
+        )
+    if (
+        _is_safe_integer(surplus)
+        and isinstance(has_payer_contribution, bool)
+        and _is_safe_integer(payer_contribution_amount)
+    ):
+        expected_has_contribution = surplus < 0
+        expected_contribution_amount = -surplus if surplus < 0 else 0
+        if (
+            has_payer_contribution != expected_has_contribution
+            or payer_contribution_amount != expected_contribution_amount
+        ):
+            errors.append(
+                "差額の有無・立て替え金額が余剰金額と整合していません。"
+            )
     if not isinstance(counts, dict):
         errors.append("人数を学年ごとのオブジェクトで指定してください。")
     if not isinstance(per_person, dict):
@@ -172,7 +195,6 @@ def validate_settlement_input(input_data: Any) -> list[str]:
         and _is_safe_integer(total_amount)
         and total_amount > 0
         and _is_safe_integer(surplus)
-        and surplus >= 0
     ):
         collected = sum(
             counts[grade] * per_person[grade] for grade in GRADES

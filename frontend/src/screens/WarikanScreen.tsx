@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useWarikan } from '../state/useWarikan'
-import { createRecord, save } from '../storage/historyStore'
+import {
+  createSettlementInput,
+  save,
+  SettlementApiError,
+} from '../storage/historyStore'
 import TotalAmountField from '../components/TotalAmountField'
 import GradeInputList from '../components/GradeInputList'
 import PlanCardList from '../components/PlanCardList'
@@ -17,12 +21,14 @@ type Props = {
 export default function WarikanScreen({ onSaved }: Props) {
   const { state, actions, inputsOpen, sheetSurplus } = useWarikan()
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isSaving, setSaving] = useState(false)
 
-  const handleSave = () => {
-    if (state.sheet.kind !== 'result') return
+  const handleSave = async () => {
+    if (state.sheet.kind !== 'result' || isSaving) return
+    setSaving(true)
     try {
-      save(
-        createRecord({
+      await save(
+        createSettlementInput({
           totalAmount: state.input.totalAmount,
           counts: state.input.counts,
           perPerson: state.sheet.amounts,
@@ -34,8 +40,12 @@ export default function WarikanScreen({ onSaved }: Props) {
       setSaveError(null)
       actions.markSaved()
       onSaved()
-    } catch {
-      setSaveError('保存に失敗しました。ブラウザの設定を確認してください。')
+    } catch (error) {
+      setSaveError(
+        error instanceof SettlementApiError ? error.message : '保存に失敗しました。',
+      )
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -111,6 +121,7 @@ export default function WarikanScreen({ onSaved }: Props) {
             eventName={state.sheet.eventName}
             shopName={state.sheet.shopName}
             saved={state.sheet.saved}
+            isSaving={isSaving}
             saveError={saveError}
             onEventNameChange={actions.setEventName}
             onShopNameChange={actions.setShopName}

@@ -11,6 +11,7 @@ type Props = {
   eventName: string
   shopName: string
   saved: boolean
+  isSaving: boolean
   saveError: string | null
   onEventNameChange: (value: string) => void
   onShopNameChange: (value: string) => void
@@ -28,6 +29,7 @@ export default function ResultSheet({
   eventName,
   shopName,
   saved,
+  isSaving,
   saveError,
   onEventNameChange,
   onShopNameChange,
@@ -38,7 +40,8 @@ export default function ResultSheet({
 
   const handleCopy = () => {
     const body = visibleGrades.map((grade) => `${grade} ${yen(amounts[grade])}`).join(' / ')
-    const text = `${body}（合計 ${yen(input.totalAmount)}）`
+    const difference = surplus < 0 ? ` / 幹事立て替え ${yen(-surplus)}` : ''
+    const text = `${body}（合計 ${yen(input.totalAmount)}${difference}）`
     void navigator.clipboard?.writeText(text)
     setCopied(true)
   }
@@ -86,7 +89,13 @@ export default function ResultSheet({
         <span>
           合計 {yen(input.totalAmount)} / {totalHeadCount(input.counts)}人
         </span>
-        <span>{surplus === 0 ? '余剰なし' : `余剰 ${yen(surplus)}`}</span>
+        <span>
+          {surplus < 0
+            ? `幹事立て替え ${yen(-surplus)}`
+            : surplus === 0
+              ? '余剰なし'
+              : `余剰 ${yen(surplus)}`}
+        </span>
       </div>
 
       <div className="mb-3.5 flex flex-col gap-2 border-t border-line pt-3.5">
@@ -131,12 +140,12 @@ export default function ResultSheet({
         <button
           type="button"
           onClick={onSave}
-          disabled={saved}
+          disabled={saved || isSaving}
           className={`shrink-0 rounded-xl px-5 py-3.5 text-[13px] font-bold tracking-wide whitespace-nowrap ${
             saved ? 'cursor-default bg-accent/12 text-accent' : 'bg-accent text-white'
           }`}
         >
-          {saved ? '保存されました' : '保存'}
+          {saved ? '保存されました' : isSaving ? '保存中…' : '保存'}
         </button>
       </div>
     </>
