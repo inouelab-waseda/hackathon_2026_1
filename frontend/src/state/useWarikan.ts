@@ -16,7 +16,6 @@ export function useWarikan() {
       setTotal: (value: string) => dispatch({ type: 'setTotal', value }),
       incCount: (grade: Grade) => dispatch({ type: 'incCount', grade }),
       decCount: (grade: Grade) => dispatch({ type: 'decCount', grade }),
-      toggleFix: (grade: Grade) => dispatch({ type: 'toggleFix', grade }),
       setFixedAmount: (grade: Grade, value: string) =>
         dispatch({ type: 'setFixedAmount', grade, value }),
       calculate: () => dispatch({ type: 'calculate' }),

@@ -34,7 +34,6 @@ export type WarikanAction =
   | { type: 'setTotal'; value: string }
   | { type: 'incCount'; grade: Grade }
   | { type: 'decCount'; grade: Grade }
-  | { type: 'toggleFix'; grade: Grade }
   | { type: 'setFixedAmount'; grade: Grade; value: string }
   | { type: 'calculate' }
   | { type: 'toggleInputs' }
@@ -55,7 +54,7 @@ export const initialState: WarikanState = {
     totalAmount: 48000,
     counts: { M2: 3, M1: 4, B4: 5, B3: 2 },
     fixed: byGrade(false),
-    fixedAmounts: { M2: 5000, M1: 4000, B4: 3000, B3: 2500 },
+    fixedAmounts: byGrade(0),
   },
   inputsOpen: true,
   plans: null,
@@ -97,17 +96,15 @@ export function warikanReducer(state: WarikanState, action: WarikanAction): Wari
         },
       })
 
-    case 'toggleFix':
+    case 'setFixedAmount': {
+      const amount = toAmount(action.value)
       return withInput(state, {
         ...state.input,
-        fixed: { ...state.input.fixed, [action.grade]: !state.input.fixed[action.grade] },
+        // 金額の有無をそのまま固定状態として扱う。
+        fixed: { ...state.input.fixed, [action.grade]: amount > 0 },
+        fixedAmounts: { ...state.input.fixedAmounts, [action.grade]: amount },
       })
-
-    case 'setFixedAmount':
-      return withInput(state, {
-        ...state.input,
-        fixedAmounts: { ...state.input.fixedAmounts, [action.grade]: toAmount(action.value) },
-      })
+    }
 
     case 'calculate': {
       const errors = validateInput(state.input)

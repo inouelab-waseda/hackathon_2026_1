@@ -62,7 +62,6 @@ export default function WarikanScreen({ onSaved }: Props) {
           onToggle={actions.toggleInputs}
           onIncrement={actions.incCount}
           onDecrement={actions.decCount}
-          onToggleFix={actions.toggleFix}
           onFixedAmountChange={actions.setFixedAmount}
           onCalculate={actions.calculate}
         />
