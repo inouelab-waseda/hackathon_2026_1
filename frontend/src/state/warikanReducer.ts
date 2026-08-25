@@ -1,7 +1,5 @@
 import { byGrade } from '../types/warikan'
 import type { ByGrade, Grade, Plan, WarikanInput } from '../types/warikan'
-import { calculatePlans } from '../domain/calculate'
-import { validateInput } from '../domain/validation'
 import { calcSurplus } from '../domain/settlement'
 
 /**
@@ -26,6 +24,8 @@ export type WarikanState = {
   inputsOpen: boolean
   /** null は「まだ計算していない」を意味する */
   plans: Plan[] | null
+  /** 計算をバックエンドに依頼して結果を待っている間は true */
+  isCalculating: boolean
   errors: string[]
   sheet: SheetState
 }
@@ -35,7 +35,9 @@ export type WarikanAction =
   | { type: 'incCount'; grade: Grade }
   | { type: 'decCount'; grade: Grade }
   | { type: 'setFixedAmount'; grade: Grade; value: string }
-  | { type: 'calculate' }
+  | { type: 'calculateStarted' }
+  | { type: 'calculateSucceeded'; plans: Plan[] }
+  | { type: 'calculateFailed'; errors: string[] }
   | { type: 'toggleInputs' }
   | { type: 'choosePlan'; plan: Plan }
   | { type: 'adjustAmount'; grade: Grade; delta: number }
@@ -58,6 +60,7 @@ export const initialState: WarikanState = {
   },
   inputsOpen: true,
   plans: null,
+  isCalculating: false,
   errors: [],
   sheet: { kind: 'none' },
 }
@@ -71,9 +74,19 @@ function toAmount(value: string): number {
 /**
  * 入力が変わったら計算結果を必ず捨てる。
  * 古い提案が残ったまま新しい入力が表示される状態を防ぐための共通処理。
+ * 計算の依頼中に入力が変わった場合も、その結果は使わないので待機状態を解除する
+ * （遅れて届いた応答は useWarikan 側で破棄される）。
  */
 function withInput(state: WarikanState, input: WarikanInput): WarikanState {
-  return { ...state, input, plans: null, errors: [], inputsOpen: true, sheet: { kind: 'none' } }
+  return {
+    ...state,
+    input,
+    plans: null,
+    isCalculating: false,
+    errors: [],
+    inputsOpen: true,
+    sheet: { kind: 'none' },
+  }
 }
 
 export function warikanReducer(state: WarikanState, action: WarikanAction): WarikanState {
@@ -106,19 +119,21 @@ export function warikanReducer(state: WarikanState, action: WarikanAction): Wari
       })
     }
 
-    case 'calculate': {
-      const errors = validateInput(state.input)
-      if (errors.length > 0) {
-        return { ...state, errors, plans: null }
-      }
+    case 'calculateStarted':
+      return { ...state, isCalculating: true, errors: [], plans: null }
+
+    case 'calculateSucceeded':
       return {
         ...state,
+        isCalculating: false,
         errors: [],
-        plans: calculatePlans(state.input),
+        plans: action.plans,
         // 提案が出たら入力欄は折りたたんで、3案に画面を使う
         inputsOpen: false,
       }
-    }
+
+    case 'calculateFailed':
+      return { ...state, isCalculating: false, errors: action.errors, plans: null }
 
     case 'toggleInputs':
       // 未計算のときは折りたためない（入力するしかない画面なので）

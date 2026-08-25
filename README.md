@@ -2,7 +2,8 @@
 
 研究室で使える、学年（B3〜M2）ごとに負担額へ傾斜をつけた**割り勘アプリ**。
 
-全体方針は [`docs/outline.md`](docs/outline.md) を参照してください。
+全体方針は [`docs/outline.md`](docs/outline.md)、
+フロント⇄バックエンドの通信仕様は [`docs/api-contract.md`](docs/api-contract.md) を参照してください。
 
 ## 技術スタック
 
@@ -78,17 +79,19 @@ compose.yml            … frontend / backend のサービス定義
 frontend/
   src/
     types/warikan.ts   … ドメインの型（= バックエンドとの API 契約）
-    domain/            … 計算ロジック（純粋関数・React に依存しない）
-      calculate.ts     … 3案を生成する ※現在はスタブ
-      constants.ts     … 傾斜係数・丸め単位・調整幅などの定数
+    domain/            … 入力検証・集計（純粋関数。計算本体はバックエンド）
+      constants.ts     … 画面操作に関わる定数（調整幅など）
       settlement.ts    … 余剰金額の計算
       validation.ts    … 入力チェック
     state/             … 画面の状態と遷移（useReducer に集約）
+    api/               … バックエンドとの通信（POST /api/calculate）
     storage/           … 履歴の保存 ※現在は localStorage
     components/        … UI 部品
     screens/           … 割り勘画面・履歴画面
 backend/               … Flask
-  app.py               … 現在は /api/health のみ
+  app.py               … /api/health と /api/calculate
+  domain/calculate.py  … 割り勘の計算本体と傾斜係数
+  domain/validation.py … 入力検証
 docs/                  … 設計ドキュメント
 ```
 
@@ -96,15 +99,16 @@ docs/                  … 設計ドキュメント
 
 | やりたいこと | 触るファイル |
 |---|---|
-| **傾斜の係数を変える**（M1 を厚くする等） | `frontend/src/domain/constants.ts` の表の数値だけ |
-| **計算方法を差し替える**（飴玉モデルにする） | `frontend/src/domain/calculate.ts` の `calculatePlans` の中身だけ |
+| **傾斜の係数を変える**（M1 を厚くする等） | `backend/domain/calculate.py` の `WEIGHT_PRESETS` |
+| **計算方法を変える** | `backend/domain/calculate.py`（フロントに計算は入っていません） |
+| **API の呼び方を変える** | `frontend/src/api/warikanApi.ts` |
 | **履歴の保存先を API にする** | `frontend/src/storage/historyStore.ts` の `load` / `save` の中身だけ |
 | **API のリクエスト／レスポンスの形を決める** | `frontend/src/types/warikan.ts`（この型がそのまま契約） |
 | 画面の見た目を変える | `frontend/src/components/` |
 | 色・フォントを変える | `frontend/src/index.css` の `@theme` |
 | 画面の遷移やボタンの挙動を変える | `frontend/src/state/warikanReducer.ts` |
 
-**上の3つは、他のファイルを一切触らずに差し替えられるように作ってあります。** 型（入出力）が変わらない限り、画面側のコードには影響しません。
+**計算はすべてバックエンドが行います。** フロントには計算ロジックを置いていないので、係数や計算方法を変えるときにフロント側を触る必要はありません。
 
 ## 現在の実装状況（2026-08-25 時点）
 
@@ -114,8 +118,7 @@ docs/                  … 設計ドキュメント
 
 | 箇所 | 状態 |
 |---|---|
-| `domain/calculate.ts` | **スタブ**。比率配分＋500円切り上げの簡易版。飴玉モデル（別紙 v2）への差し替えが必要 |
-| `domain/constants.ts` | 傾斜係数・丸め単位（500円）・調整幅（100円）は**チーム未合意の暫定値** |
+| 傾斜係数 | `backend/domain/calculate.py` の `WEIGHT_PRESETS`。**チーム未合意の暫定値** |
 | `storage/historyStore.ts` | localStorage 保存。バックエンドができたら差し替え |
 | `state/warikanReducer.ts` の `initialState` | デモ用のサンプル値（合計48,000円 / 14人）が入っています。不要なら0に変えてください |
 | 状態1の店舗名入力 | **未実装**。プロトタイプ設計に合わせ、店名は結果シートのみに置いています |
