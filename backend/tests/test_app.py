@@ -17,6 +17,8 @@ def settlement_input():
         "counts": {"M2": 3, "M1": 4, "B4": 5, "B3": 2},
         "perPerson": {"M2": 5000, "M1": 4000, "B4": 2500, "B3": 2500},
         "surplus": 500,
+        "hasPayerContribution": False,
+        "payerContributionAmount": 0,
     }
 
 
@@ -119,6 +121,75 @@ class CalculateApiTest(unittest.TestCase):
             response.get_json()["errors"],
         )
         self.assertEqual(self.client.get("/api/settlements").get_json(), [])
+
+    def test_saves_payer_contribution_for_shortage(self):
+        input_data = settlement_input()
+        input_data["totalAmount"] = 49000
+        input_data["surplus"] = -500
+        input_data["hasPayerContribution"] = True
+        input_data["payerContributionAmount"] = 500
+
+        response = self.client.post("/api/settlements", json=input_data)
+
+        self.assertEqual(response.status_code, 201)
+        saved = response.get_json()
+        self.assertTrue(saved["hasPayerContribution"])
+        self.assertEqual(saved["payerContributionAmount"], 500)
+        self.assertEqual(saved["surplus"], -500)
+
+    def test_migrates_existing_settlement_database(self):
+        legacy_path = os.path.join(
+            self.temporary_directory.name, "legacy.sqlite3"
+        )
+        connection = sqlite3.connect(legacy_path)
+        try:
+            connection.executescript(
+                """
+                CREATE TABLE settlements (
+                    id TEXT PRIMARY KEY,
+                    saved_at TEXT NOT NULL,
+                    event_name TEXT,
+                    shop_name TEXT,
+                    total_amount INTEGER NOT NULL CHECK (total_amount > 0),
+                    surplus INTEGER NOT NULL CHECK (surplus >= 0)
+                );
+                CREATE TABLE settlement_grades (
+                    settlement_id TEXT NOT NULL,
+                    grade TEXT NOT NULL,
+                    head_count INTEGER NOT NULL,
+                    amount_per_person INTEGER NOT NULL,
+                    PRIMARY KEY (settlement_id, grade),
+                    FOREIGN KEY (settlement_id) REFERENCES settlements (id)
+                );
+                INSERT INTO settlements VALUES (
+                    'legacy-1', '2026-08-25T10:00:00.000Z',
+                    '既存履歴', NULL, 48000, 500
+                );
+                """
+            )
+            connection.executemany(
+                """
+                INSERT INTO settlement_grades VALUES (?, ?, ?, ?)
+                """,
+                [
+                    ("legacy-1", grade, settlement_input()["counts"][grade],
+                     settlement_input()["perPerson"][grade])
+                    for grade in ("M2", "M1", "B4", "B3")
+                ],
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        migrated_app = create_app(
+            {"TESTING": True, "DATABASE": legacy_path}
+        )
+        migrated_client = migrated_app.test_client()
+        records = migrated_client.get("/api/settlements").get_json()
+
+        self.assertEqual(len(records), 1)
+        self.assertFalse(records[0]["hasPayerContribution"])
+        self.assertEqual(records[0]["payerContributionAmount"], 0)
 
     def test_rejects_non_json_settlement(self):
         response = self.client.post(

@@ -6,10 +6,12 @@ import { totalHeadCount } from '../domain/settlement'
 
 type Props = {
   records: SettlementRecord[]
+  error: string | null
+  onRetry: () => void
 }
 
 /** 状態3。保存済みの決済を新しい順に並べ、タップで内訳を開く。 */
-export default function HistoryScreen({ records }: Props) {
+export default function HistoryScreen({ records, error, onRetry }: Props) {
   const [openId, setOpenId] = useState<string | null>(null)
 
   return (
@@ -22,6 +24,14 @@ export default function HistoryScreen({ records }: Props) {
       </header>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-7">
+        {error !== null && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-alert/8 px-3.5 py-3 text-alert">
+            <span className="text-[11.5px] font-medium">{error}</span>
+            <button type="button" onClick={onRetry} className="shrink-0 text-xs font-bold">
+              再試行
+            </button>
+          </div>
+        )}
         {records.length === 0 ? (
           <div className="mt-16 text-center">
             <p className="text-sm font-bold text-muted">まだ履歴がありません</p>
@@ -53,7 +63,10 @@ export default function HistoryScreen({ records }: Props) {
                       {record.shopName ?? '店名なし'} · {formatDateTime(record.savedAt)}
                     </span>
                     <span className="shrink-0 font-mono">
-                      {totalHeadCount(record.counts)}人 · 余剰 {yen(record.surplus)}
+                      {totalHeadCount(record.counts)}人 ·{' '}
+                      {record.hasPayerContribution
+                        ? `立て替え ${yen(record.payerContributionAmount)}`
+                        : `余剰 ${yen(record.surplus)}`}
                     </span>
                   </div>
                 </button>
@@ -73,6 +86,14 @@ export default function HistoryScreen({ records }: Props) {
                         </span>
                       </div>
                     ))}
+                    {record.hasPayerContribution && (
+                      <div className="mt-1 flex items-baseline justify-between rounded-lg bg-alert/8 px-2.5 py-1.5 text-alert">
+                        <span className="text-[11.5px] font-semibold">幹事立て替え</span>
+                        <span className="font-mono text-[13px] font-semibold">
+                          {yen(record.payerContributionAmount)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

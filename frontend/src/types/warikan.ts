@@ -40,11 +40,8 @@ export type Plan = {
   surplus: number
 }
 
-/** 保存される1件の決済記録。API のレスポンス／DB の1行に相当する。 */
-export type SettlementRecord = {
-  id: string
-  /** ISO8601 の日時文字列 */
-  savedAt: string
+/** 決済履歴APIへ送信する保存内容。idと日時はバックエンドが発行する。 */
+export type SettlementInput = {
   /** 行事名（任意入力なので未入力なら null） */
   eventName: string | null
   /** 店名（任意入力なので未入力なら null） */
@@ -53,6 +50,17 @@ export type SettlementRecord = {
   counts: ByGrade<number>
   perPerson: ByGrade<number>
   surplus: number
+  /** 徴収額が不足し、幹事による立て替えが発生したか */
+  hasPayerContribution: boolean
+  /** 幹事が立て替える金額。立て替えがなければ0 */
+  payerContributionAmount: number
+}
+
+/** 保存される1件の決済記録。API のレスポンス／DB の1行に相当する。 */
+export type SettlementRecord = SettlementInput & {
+  id: string
+  /** ISO8601 の日時文字列 */
+  savedAt: string
 }
 
 /** 全学年を同じ値で初期化した ByGrade を作る。 */

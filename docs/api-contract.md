@@ -120,7 +120,7 @@
 
 **3案の傾斜係数（目標比）はバックエンドの管理とします。** 計算の一部であり、2箇所に置くと必ず片方だけ修正されてずれるためです。
 
-係数の実体は `backend/domain/calculate.py` の `WEIGHT_PRESETS` にあります。フロント側に係数は持っていません（接続時に削除しました）。**係数を調整したい場合はバックエンド側を変更してください。**
+係数の実体は `backend/domain/constants.py` の `WEIGHT_PRESETS` にあります。フロント側に係数は持っていません（接続時に削除しました）。**係数を調整したい場合はバックエンド側を変更してください。**
 
 現在の値は次のとおりです（B3 = 1.00 とした相対値）。**プロトタイプ由来の暫定値で、チーム合意はまだです。**
 
@@ -149,13 +149,44 @@ curl -X POST http://localhost:5001/api/calculate \
 
 ---
 
-## 5. 今後追加予定のエンドポイント（未着手）
+## 5. 決済履歴（接続済み）
 
-履歴機能（状態3）で必要になる想定です。**まだ実装しないでください。** 形が決まったらこのファイルを更新します。
+確定した割り勘をSQLiteへ保存し、履歴画面へ新しい順で返します。`id`と`savedAt`はバックエンドが発行します。
 
 | エンドポイント | 用途 |
 |---|---|
 | `POST /api/settlements` | 確定した割り勘を1件保存する |
 | `GET /api/settlements` | 保存済みの決済を新しい順に返す |
 
-保存する1件のデータ構造は `frontend/src/types/warikan.ts` の `SettlementRecord` を参照してください（行事名・店名・支払い金額・学年ごとの人数と負担額・余剰金額・保存日時）。
+### `POST /api/settlements`
+
+#### リクエスト
+
+```json
+{
+  "eventName": "歓迎会",
+  "shopName": "研究室食堂",
+  "totalAmount": 49000,
+  "counts": { "M2": 3, "M1": 4, "B4": 5, "B3": 2 },
+  "perPerson": { "M2": 5000, "M1": 4000, "B4": 2500, "B3": 2500 },
+  "surplus": -500,
+  "hasPayerContribution": true,
+  "payerContributionAmount": 500
+}
+```
+
+| フィールド | 意味 |
+|---|---|
+| `eventName` / `shopName` | 任意入力。空文字列は`null`として保存 |
+| `counts` / `perPerson` | 4学年すべてを含む人数と1人あたり金額 |
+| `surplus` | 徴収合計 − 支払い金額。手動調整後に不足する場合は負 |
+| `hasPayerContribution` | `surplus < 0`なら`true` |
+| `payerContributionAmount` | `surplus < 0`なら`-surplus`、それ以外は0 |
+
+成功時は、バックエンドが発行した`id`と`savedAt`を加えた`SettlementRecord`を201で返します。入力値同士が整合しない場合は400と`validation_failed`を返します。
+
+### `GET /api/settlements`
+
+保存済みの`SettlementRecord`配列を新しい順に200で返します。履歴がない場合は`[]`です。
+
+SQLiteの実体はComposeの`backend_data` named volumeに保存します。旧スキーマが見つかった場合は、既存履歴を保持したまま立て替え対応スキーマへ自動移行します。

@@ -1,6 +1,5 @@
 import { byGrade } from '../types/warikan'
 import type { ByGrade, Grade, Plan, WarikanInput } from '../types/warikan'
-import { calcSurplus } from '../domain/settlement'
 
 /**
  * 開いているシート。判別可能なユニオンにすることで
@@ -164,8 +163,6 @@ export function warikanReducer(state: WarikanState, action: WarikanAction): Wari
 
     case 'confirmAdjust': {
       if (state.sheet.kind !== 'adjust') return state
-      // 不足している状態では確定させない（画面側でもボタンを無効化している）
-      if (calcSurplus(state.input, state.sheet.amounts) < 0) return state
       return {
         ...state,
         sheet: {
