@@ -95,7 +95,7 @@ export default function GradeInputList({
                   >
                     <span className="font-mono text-xs text-faint">¥</span>
                     <input
-                      value={input.fixedAmounts[grade] === 0 ? '' : String(input.fixedAmounts[grade])}
+                      value={input.fixed[grade] ? String(input.fixedAmounts[grade]) : ''}
                       onChange={(event) => onFixedAmountChange(grade, event.target.value)}
                       inputMode="numeric"
                       placeholder="固定値"

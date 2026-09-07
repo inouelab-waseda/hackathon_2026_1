@@ -109,11 +109,12 @@ export function warikanReducer(state: WarikanState, action: WarikanAction): Wari
       })
 
     case 'setFixedAmount': {
+      const isEmpty = action.value.replace(/[^0-9]/g, '') === ''
       const amount = toAmount(action.value)
       return withInput(state, {
         ...state.input,
-        // 金額の有無をそのまま固定状態として扱う。
-        fixed: { ...state.input.fixed, [action.grade]: amount > 0 },
+        // 入力の有無を固定状態として扱う。0 と未入力を区別するため、金額ではなく文字列で判定する。
+        fixed: { ...state.input.fixed, [action.grade]: !isEmpty },
         fixedAmounts: { ...state.input.fixedAmounts, [action.grade]: amount },
       })
     }
