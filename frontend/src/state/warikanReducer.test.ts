@@ -87,6 +87,16 @@ describe('入力変更との連動', () => {
     expect(state.input.fixed.M2).toBe(true)
   })
 
+  it('0円を入力しても固定される（未入力と区別する）', () => {
+    const state = warikanReducer(initialState, {
+      type: 'setFixedAmount',
+      grade: 'M2',
+      value: '0',
+    })
+    expect(state.input.fixed.M2).toBe(true)
+    expect(state.input.fixedAmounts.M2).toBe(0)
+  })
+
   it('人数を変えると計算結果が破棄される', () => {
     const state = warikanReducer(calculated(), { type: 'incCount', grade: 'M2' })
     expect(state.plans).toBeNull()
